@@ -161,6 +161,8 @@ left: 0;
 #cdp img {
     width: 150px;
     height: 90px;
+    position: relative;
+    bottom: 3px;
 }
 
 .grey {
