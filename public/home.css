@@ -545,8 +545,8 @@ left: 0;
   border-radius: 4px;
   padding: 5px 10px;
   font-size: 14px;
-  background-color: rgb(63, 51, 150);
-  color: white;
+  background-color: white;
+  color:black;
   cursor: pointer;
   display: inline-block;
 }
