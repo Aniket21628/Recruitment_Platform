@@ -1,239 +1,153 @@
-.timeline h4,.timeline p,.timeline ul.timeline li,.timeline a {
-    margin: 0;
-    padding: 0;
+#procedure{
+  background-color: #e7f3f9;
+  font-family: Arial, sans-serif;
+}
+#rec{
+  text-align: center;
+  position: relative;
+  top: 30px;
+  margin-bottom: 90px;
+}
+.timeline {
+  position: relative;
+  margin: 50px 0;
+  padding: 40px 0;
+  background-color: #e7f3f9;
+}
+
+.timeline-container {
+  position: relative;
+  width: 100%;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.timeline-item {
+  position: relative;
+  padding: 20px 30px;
+  background: linear-gradient(to right, #4e54c8, #8f94fb);
+  color: #fff;
+  border-radius: 6px;
+  width: 40%;
+  margin-bottom: 50px;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-item.left {
+  left: 0;
+}
+
+.timeline-item.right {
+  left: 60%;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  right: -12.5px;
+  background-color: #fff;
+  border: 4px solid #1b096d;
+  top: 15px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.timeline-item.left::before {
+  left: -12.5px;
+  right: auto;
+}
+
+.timeline-content {
+  padding: 20px;
+  background-color: #1b096d;
+  border-radius: 6px;
+}
+
+.timeline-content h4 {
+  margin-bottom: 10px;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.timeline-content p {
+  margin-bottom: 0;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.timeline-content a {
+  color: #add8e6;
+  text-decoration: underline;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  width: 4px;
+  background-color: #1b096d;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  margin-left: -2px;
+  z-index: 0;
+}
+
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  top: 20px; /* Adjust if necessary to center the arrow vertically */
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.timeline-item.left::after {
+  right: -25px; /* Adjust the position if necessary */
+  border-width: 10px 0 10px 14px; /* Increased the size */
+  border-color: transparent transparent transparent #1b096d;
+}
+
+.timeline-item.right::after {
+  left: -25px; /* Adjust the position if necessary */
+  border-width: 10px 14px 10px 0; /* Increased the size */
+  border-color: transparent #1b096d transparent transparent;
+}
+
+@media screen and (max-width: 768px) {
+  .timeline-item {
+      width: 100%;
+      left: 0;
+      padding-left: 30px;
   }
-  
-   .timeline div, .timeline h4,.timeline  p,.timeline  ul,.timeline  li,.timeline  a {
-    box-sizing: border-box;
+
+  .timeline-item.right {
+      left: 0;
   }
-  #procedure {
-    background-color: #dbeff4;
-    border-radius: 40px;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+
+  .timeline-container {
+      padding-left: 60px;
+      padding-right: 20px;
   }
-  
-  #rec {
-    text-align: center;
-    padding-top: 80px;
-    font-family:  'Times New Roman', Times, serif;
-    font-size: 34px;
-    padding-bottom: 50px;
+
+  .timeline-item::before {
+      /* left: -25px; */
+      left: auto;
   }
-  
-  .timeline {
-    display: flex;
-    justify-content: flex-start;
-    font: normal 0.6rem/1.2sans-serif;
-    /* background: #456990;
-    background-image: linear-gradient(#456990 30%, #111); */
-    background-attachment: fixed;
-    color: #ffffff;
-    overflow-x: hidden;
-    padding-bottom: 50px;
-  }
-  
-  .timeline h4 {
-    font-size: 25px;
-    font-weight: 60;
-    color: #111;
-    padding-bottom: 5px;
-  }
-  .timeline p{
-    font-size: 20px;
-  }
-  
-  .timeline ul {
-    margin-left: 3rem;
-  }
-  
-  .timeline ul li {
-    list-style-type: none;
-    position: relative;
-    width: 0.4rem;
-    padding: 2em 0;
-    background: #1b096d;
-  }
-  .timeline ul li::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2.4rem;
-    height: 2.4rem;
-    border-radius: 50%;
-    background: inherit;
-  }
-  
-  .timeline ul li div {
-    position: relative;
-    top: 4em;
-    width: 60px;
-    padding: 1.25rem 1.75rem;
-   
-  }
-  
-  .timeline ul li div::before {
-    content: "";
-    position: absolute;
-    bottom: 2em;
-    width: 0;
-    height: 0;
-    border-style: solid;
-  }
-  
-  .timeline ul li:nth-child(odd) div {
-    left: calc(0.6rem + 1.5em + 3rem);
-    background-image: linear-gradient(to left, #96bdef, #1b096d);
-  }
-  
-  .timeline ul li:nth-child(odd) div::before {
-    left: 1px;
-    border-width: 1.5rem 1.5rem 1.5rem 0;
-    border-color: transparent rgba(255, 255, 255, 0.5) transparent transparent;
-    transform: translateX(-0.5rem);
-  }
-  
-  .timeline ul li:nth-child(even) div {
-    left: calc(50% + 1.5em);
-    background-image: linear-gradient(to right, #96bdef, #17046c);
-  }
-  
-  .timeline ul li:nth-child(even) div::before {
-    left: 1px;
-    border-width: 1.5rem 1.5rem 1.5rem 0;
-    border-color: transparent #96bdef transparent transparent;
-    transform: translateX(-1.5rem);
-  }
-  
-  .timeline.right {
-    justify-content: flex-end;
-  }
-  
-  .timeline.right ul {
-    margin-right: 4rem;
+  .timeline::before {
+    left: 30px;
     margin-left: 0;
-  }
-  
-  .timeline.right:nth-child(odd) div {
-    left: inherit;
-    right: calc(50% + 1.5em);
-  }
-  
-  .timeline.right:nth-child(odd) div::before {
-    left: inherit;
-    right: 1px;
-    transform: rotate(0.5turn) translateX(-1.5rem);
-  }
-  
-  .timeline.right:nth-child(even) div {
-    left: inherit;
-    right: calc(0.6rem + 1.5em + 3rem);
-  }
-  
-  .timeline.right:nth-child(even) div::before {
-    left: inherit;
-    right: -1.5rem;
-    transform: rotate(0.5turn);
-  }
-  
-  .timeline.animation ul li:nth-child(odd) div {
-    transform: translateX(20rem);
-  }
-  
-  .timeline.animation ul li:nth-child(even) div {
-    transform: translateX(20rem);
-  }
-  
-  .timeline.animation ul li::after {
-    transform: scale(0) translateX(-50%);
-    visibility: hidden;
-    opacity: 0;
-    transition: all 0.35s ease-in-out;
-    transform-origin: left;
-  }
-  
-  .timeline.animation ul li.slide-in::after {
-    visibility: visible;
-    opacity: 1;
-    transform: scale(1) translateX(-50%);
-  }
-  
-  .timeline.animation ul li div {
-    visibility: hidden;
-    opacity: 0;
-    transition: all 0.5s ease-in-out;
-  }
-  
-  .timeline.animation ul li.slide-in div {
-    transform: none !important;
-    visibility: visible;
-    opacity: 1;
-  }
-  
-  .timeline.right ul li:nth-child(odd) div {
-    transform: translateX(-20rem);
-  }
-  
-  .timeline.right ul li:nth-child(even) div {
-    transform: translateX(-20rem);
-  }
-  
-  @media only screen and (min-width: 992px) {
-    .timeline ul {
-        margin: 0 auto;
-    }
-    .timeline ul li div {
-        width: 30rem;
-        
-    }
-    .timeline ul li:nth-child(odd) div {
-        left: calc(-30rem - 1.5em - 2rem);
-    }
-    .timeline ul li:nth-child(odd) div::before {
-        left: 30.5rem;
-        border-width: 1.5rem 0 1.5rem 1.5rem;
-        border-color: transparent transparent transparent #96bdef;
-    }
-    .timeline ul li:nth-child(even) div {
-        left: calc(50% + 4em);
-    }
-    .timeline ul li:nth-child(even) div::before {
-        left: 1px;
-        border-width: 1.5rem 1.5rem 1.5rem 0;
-        border-color: transparent #96bdef transparent transparent;
-        transform: translateX(-1.55rem);
-    }
-    .timeline.right ul {
-        margin: 0 auto;
-    }
-    .timeline.right ul li div {
-        width: 30rem;
-    }
-    .timeline.right ul li:nth-child(odd) div {
-        left: calc(-30rem - 1em - 3rem);
-    }
-    .timeline.right ul li:nth-child(odd) div::before {
-        left: 30rem;
-        transform: none;
-    }
-    .timeline.right ul li:nth-child(even) div {
-        right: inherit;
-        left: calc(50% + 1.5em);
-    }
-    .timeline.right ul li:nth-child(even) div::before {
-        right: inherit;
-        left: 1px;
-        transform: none;
-        transform: translateX(-1.5rem);
-    }
-    .timeline.animation ul li:nth-child(odd) div {
-        transform: translateX(-20rem);
-    }
-    .timeline.animation ul li:nth-child(even) div {
-        transform: translateX(20rem);
-    }
-  }
-  
+}
+.timeline-item.left::before {
+  /* left: -25px; */
+  left: 424px;
+}
+
+.timeline-item.left::after,
+.timeline-item.right::after {
+  left: -25px; /* Arrows aligned to the left for both items */
+  right: auto;
+  border-width: 10px 14px 10px 0;
+  border-color: transparent #1b096d transparent transparent;
+}
+}

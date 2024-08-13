@@ -838,11 +838,11 @@ img[alt="IIITM Alumni"] {
 
 
 .director {
- height:330px ;
+ height:auto ;
   /* margin-left: -50px; */
   padding-right: 0; /* Remove the padding */
   margin-bottom: 20px; /* Add some space below the image */
-  width: 580px;
+  width: 100%;
 }
 
 .msg-container {
@@ -854,20 +854,11 @@ img[alt="IIITM Alumni"] {
   border-radius: 20px;
   padding: 20px 30px;
   margin-bottom: 20px;
-  animation: slideInRight 1s; /* Slide-in animation */
- 
+  margin-left: 50px;
+ width: 55%;
 }
 
-@keyframes slideInRight {
-  from {
-      transform: translateX(100%);
-      opacity: 0;
-  }
-  to {
-      transform: translateX(0);
-      opacity: 1;
-  }
-}
+
 
 #dirname {
   margin-top: 15px;
@@ -961,14 +952,14 @@ float:right;
 
 .cdpmsg {
   background-color: #b3d0f8;
-  border-radius: 20px;
+  border-radius: 20px 30px;
   padding: 20px;
   margin-bottom: 20px;
 }
 
 #anurag {
-  width: 70%;
-  height: auto;
+  width: 180px;
+  height: 380px;
   margin-top: 20px;
 }
 
@@ -978,7 +969,7 @@ float:right;
 @media (max-width:1800px)
 {
   #anurag{
-    width: 97%;
+    width: 82%;
   }
 }
 /* Media queries for responsiveness */
@@ -989,7 +980,7 @@ float:right;
 
   #anurag {
       margin-left: 0;
-      width: 60%;
+      width: 75%;
   }
 
   #deanname {
