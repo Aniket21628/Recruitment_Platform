@@ -482,6 +482,17 @@ app.post('/create-drive', async (req, res) => {
     }
 });
 
+cron.schedule('0 0 * * *', async () => { 
+    try {
+        const now = new Date();
+        const cutoffDate = new Date(now.setDate(now.getDate())); // 30 days ago
+
+        await Drive.deleteMany({ dateOfDrive: { $lt: cutoffDate } });
+    } catch (error) {
+        console.error('Error deleting old drives:', error);
+    }
+});
+
 app.get('/rechome', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'rechome.html'));
 });
