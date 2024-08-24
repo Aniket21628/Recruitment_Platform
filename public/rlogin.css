@@ -27,7 +27,6 @@ body {
     color: #151717;
     font-weight: 600;
 }
-
 .inputForm {
     border: 1.5px solid #ecedec;
     border-radius: 10px;
@@ -60,7 +59,9 @@ body {
     gap: 10px;
     justify-content: space-between;
 }
-
+#login-form{
+    background-image: url('images/bkg.jpg');
+}
 .flex-row>div>label {
     font-size: 14px;
     color: black;
@@ -143,13 +144,13 @@ body {
 }
 
 #side-img {
-    width: 40vw;
-    background-color: rgba(136, 136, 239, 0.267)
+    width: 35vw;
+    background-color: rgba(91, 158, 202, 0.689)
 }
 
 #login-form {
     display: flex;
-    width: 60vw;
+    width: 65vw;
     height: 100vh;
     background-color: #140878;
     justify-content: center;
@@ -157,7 +158,10 @@ body {
 }
 
 #cdp-logo {
-    transform: scale(0.6);
+   width: 530px;
+   height: 410px;
+   transform: scale(0.6);
+   margin-top: -11%;
 }
 
 #clg-logo {
@@ -204,4 +208,47 @@ body {
 
 .active:after {
     content: "\2796";
+}
+@media screen and (max-width: 968px) {
+    /* Stack elements vertically on smaller screens */
+   
+    #cdp-logo{
+        width: 360px;
+        height: 280px;
+        
+    }
+    #clg-logo{
+        width: 310px;
+    }
+    /* Adjust sidebar width */
+    #side-img {
+        width: 29vw;
+        padding: 5px;
+    }
+    
+    /* Hide logos on small screens */
+   
+    
+    /* Full width login form */
+    #login-form {
+        width: 71vw;
+        padding: 3px;
+    }
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 770px) {
+  #clg-logo{
+      width: 270px;
+      height: 80px;
+    }
+  #cdp-logo{
+    width: 400px;
+    height: 350px;
+    margin-top: -40px;
+  }
+  .form{
+    width: 55vw;
+  }
+   
 }
