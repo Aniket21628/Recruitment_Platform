@@ -44,3 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// document.addEventListener('DOMContentLoaded', async () => {
+//     try {
+//         const response = await fetch('/check-session', { method: 'GET' });
+
+//         if (response.ok) {
+//             // If session is active, redirect to rechome
+//             const result = await response.json();
+//             window.location.href = `/rechome?id=${result.id}`;
+//         }
+//     } catch (error) {
+//         console.error('Error checking session:', error);
+//         // If there's an error, you can choose to do nothing or handle it
+//     }
+// });

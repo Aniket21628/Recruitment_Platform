@@ -17,14 +17,15 @@
                     <img src="images/logo-white-Photoroom.png" alt="University Logo" class="img-fluid mb-3" style="margin-top:40px;">
                     <div class="profile" style="display: flex; align-items: center;">
                         <div style="text-align: center;">
-                            <h4 id="studentName" style="margin-left: 10px;"></h4>
+                            <h3 id="studentName" ></h3>
                             <p id="programName"></p>
                         </div>
                     </div>
-                    <a href="#" id="student-home"><i class="fas fa-home"></i> Home</a>
+                    <a href="#" id="jobs-btn"><i  class="fa-solid fa-briefcase" ></i> Jobs</a>
+                    <a href="#" id="home-btn"><i class="fas fa-home"></i>Home</a>
                     <a href="#" id="applied-jobs"><i class="fas fa-tasks"></i> Applied Jobs</a>
                     <a href="#"><i class="fas fa-user"></i> My Profile</a>
-                    <a href="#"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                    <a href="/logout" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                 </div>
             </nav>
         </div>
@@ -297,7 +298,10 @@
             window.location.href = `/stuAppliedJobs?id=${stuId}`;
         })
 
-        document.getElementById('student-home').addEventListener('click', () => {
+        document.getElementById('home-btn').addEventListener('click', () => {
+            window.location.href = `/homestu?id=${stuId}`;
+        })
+        document.getElementById('jobs-btn').addEventListener('click', () => {
             window.location.href = `/stuhome?id=${stuId}`;
         })
 
@@ -321,8 +325,35 @@
                 document.getElementById('studentName').textContent = 'No student ID provided';
             }
         });
-
-       
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutBtn = document.querySelector('#logout-btn'); // Assuming there's a logout button with this ID
+        
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+        
+                    try {
+                        const response = await fetch('/logout', { method: 'GET' });
+        
+                        if (response.ok) {
+                            alert('Logout successful!');
+                            window.location.href = '/';
+                        } else {
+                            alert('Error logging out. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An error occurred during logout. Please try again.');
+                    }
+                });
+            }
+        });
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                // If coming back to the page from cache, reload the page
+                window.location.reload();
+            }
+        });
 
     </script>
 </body>

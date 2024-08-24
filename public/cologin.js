@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     alert('Login successful!');
-                    window.location.href = '/verifierHome'; 
+                    window.location.href = `/verifierhome?id=${result.id}`; 
                     // window.location.href = '/dashboard.html';
                 } else {
                     alert(`Login failed: ${result.message}`);

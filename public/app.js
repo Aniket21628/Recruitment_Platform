@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const signupForm = document.querySelector('#signup-form-id');
+    // const signupForm = document.querySelector('#signup-form-id');
     const loginForm = document.querySelector('#login-form-id');
 
     if (loginForm) {
@@ -30,14 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(loginData)
                 });
 
-                const data = await response.json();
+                const result = await response.json();
 
                 if (response.ok) {
                     // localStorage.setItem('token', data.token);
                     alert('Login successful!');
-                    window.location.href = `/stuhome?id=${data.id}`; 
+                    window.location.href = `/stuhome?id=${result.id}`; 
                 } else {
-                    alert(`Login failed: ${data.message}`);
+                    alert(`Login failed: ${result.message}`);
                 }
             } catch (error) {
                 console.error('Error:', error);

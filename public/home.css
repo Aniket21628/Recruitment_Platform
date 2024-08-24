@@ -116,9 +116,33 @@ body{
 
 .logo{
     padding-top: 10%;
-   
+    position: relative;
+    left: 32%;
+    width: 7%;
+    height: 40%;
     animation: logo 2.5s ease 0s 1 normal forwards;
    
+}
+@media (max-width:768px)
+{
+  .logo{
+    left: 14%;
+    top: 5%;
+  }
+}
+@media (max-width:1500px)
+{
+  .logo{
+    left: 27%;
+    top: 8%;
+  }
+}
+@media (max-width:500px)
+{
+  .logo{
+    left:3%;
+    
+  }
 }
 #lg{
   width: 460px;
@@ -364,6 +388,29 @@ left: 0;
     color: #000000;
     box-shadow:none;
   }
+#rec-buttoni{
+  padding-top: 5px;
+    align-items: center;
+    width: 145px;
+    height: 40px;
+    border: none;
+    border-radius: 5px;
+    background: #77d1d2;
+    font-weight: bold;
+    font-size: 1.0em;
+    color:#ffffff;
+    outline: none;
+    margin-top: -15px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+#rec-buttoni:active {
+  /*set time duration to your needs */
+  animation: gradient 100ms;
+  background: #e6e6e6;
+  color: #000000;
+  box-shadow:none;
+}
 
 
 
@@ -868,7 +915,10 @@ img[alt="IIITM Alumni"] {
 {
   .director{
     height:270px;
-    width:320px
+    width:320px;
+    position: relative;
+    left: 10%;
+    
   }
 }
 @media (max-width:1800px)
@@ -893,6 +943,8 @@ img[alt="IIITM Alumni"] {
   .director{
     height: 330px;
     width:450px;
+    position: relative;
+    left: 10%;
   }
 }
 
@@ -995,6 +1047,7 @@ float:right;
 
   #anurag {
       margin-top: 10px;
+      width: 60%;
   }
 }
 
