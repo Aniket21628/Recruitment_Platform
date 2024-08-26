@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     alert('Login successful!');
                     // Redirect to another page if needed
-                    window.location.href = `/rechome?id=${result.id}`;
+                    window.location.href = `/rechome`;
                 } else {
                     alert(`Login failed: ${result.message}`);
                 }

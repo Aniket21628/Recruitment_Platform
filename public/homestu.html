@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Career Development and Placement Cell</title>
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
     <link rel="stylesheet" href="home.css">
     <link rel="stylesheet" href="chart.css">
     <link rel="stylesheet" href="home2.css">
@@ -940,11 +941,26 @@
     <script src="script.js"></script>
     <script src="chart.js"></script>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const stuId = urlParams.get('id');
-        document.getElementById('job-but').addEventListener('click', () => {
-            window.location.href = `/stuhome?id=${stuId}`;
-        })
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/getUserId')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.userId) {
+                        const stuId = data.userId;
+        
+                        document.getElementById('job-but').addEventListener('click', () => {
+                            window.location.href = `/stuhome`;
+                        });
+                    } else {
+                        // Handle the case where the user is not logged in
+                        window.location.href = '/login1';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user ID:', error);
+                    window.location.href = '/login1';
+                });
+        });
         document.addEventListener('DOMContentLoaded', () => {
             const logoutBtn = document.querySelector('#logout-btn'); // Assuming there's a logout button with this ID
         

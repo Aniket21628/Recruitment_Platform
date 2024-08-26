@@ -133,21 +133,12 @@ app.get('/check-session', (req, res) => {
     }
 });
 
-app.post('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            return res.status(500).send('Logout failed');
-        }
-        res.redirect('/home');
-    });
-});
 
 function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
+    if (req.isAuthenticated && req.isAuthenticated()) {
         return next();
-    } else {
-        res.status(401).json({ message: 'Unauthorized' });
     }
+    res.redirect('/');
 }
 
 // Route to serve the signup page
@@ -158,25 +149,52 @@ app.get('/signup', (req, res) => {
 app.get('/login1', (req, res) => {
     if (req.session.userId) {
         // If the user is already logged in, redirect to the rechome page
-        return res.redirect(`/stuhome?id=${req.session.userId}`);
+        return res.redirect(`/stuhome`);
     }
     res.sendFile(path.join(__dirname, 'public', 'login1.html'));
 });
-
+app.get('/api/getUserId', (req, res) => {
+    if (req.session.userId) {
+        res.json({ userId: req.session.userId });
+    } else {
+        res.status(401).json({ error: 'User not logged in' });
+    }
+});
 app.get('/rsignup', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'rsignup.html'))
 })
 
-app.get('/rlogin', (req, res) => {
-    if (req.session.userId) {
-        // If the user is already logged in, redirect to the rechome page
-        return res.redirect(`/rechome?id=${req.session.userId}`);
+app.get('/rlogin', async(req, res) => {
+    try {
+        // Fetch recruiter details using the recruiter ID from the session
+        const recId = req.session.userId; // Assuming userId holds recruiter ID, change if necessary
+        const recruitersCollection = db.collection('recruiters')
+       
+
+        const recruiter = await recruitersCollection.findOne(
+            { _id: new ObjectId(recId) },
+            { projection: { name: 1, company: 1 } } // Fetch both name and company fields
+        );
+        if (recruiter.company) {
+            // If the user is already logged in, redirect to the rechome page
+            return res.redirect(`/rechome`);
+        }
     }
+    catch (error) {
+        console.error('Error fetching recruiter details:', error);
+        
         res.sendFile(path.join(__dirname,'public', 'rlogin.html'));
+
+    }
+
+
     
-})
+    
+    
+});
 
 app.get('/cologin', (req, res) => {
+    
     if (req.session.userId) {
         // If the user is already logged in, redirect to the rechome page
         return res.redirect(`/verifierhome?id=${req.session.userId}`);
@@ -283,31 +301,24 @@ app.post('/rlogin', async (req, res) => {
     }
 });
 
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({ message: 'Error logging out', error: err });
-        }
+app.get('/logout', async (req, res) => {
+    try {
+        await destroySession(req.session);
         res.clearCookie('connect.sid'); // This clears the session cookie
         res.status(200).json({ message: 'Logout successful' });
-    });
+    } catch (err) {
+        res.status(500).json({ message: 'Error logging out', error: err });
+    }
 });
 
-app.post('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            return res.status(500).send('Logout failed');
-        }
-        res.redirect('/home');
-    });
-});
+
+
 
 function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
+    if (req.isAuthenticated && req.isAuthenticated()) {
         return next();
-    } else {
-        res.status(401).json({ message: 'Unauthorized' });
     }
+    res.redirect('/');
 }
 
 
@@ -326,7 +337,7 @@ app.get('/reset-password', (req, res) => {
 
 
 
-app.get('/stuProfile',isAuthenticated, (req, res) => {
+app.get('/stuProfile',(req, res) => {
     // const email = req.query.email;
     res.sendFile(path.join(__dirname, 'public', 'stuProfile.html'));
 });
@@ -501,7 +512,7 @@ app.post('/cologin', async (req, res) => {
 });
 
 
-app.get('/logout', (req, res) => {
+app.post('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             return res.status(500).json({ message: 'Error logging out', error: err });
@@ -512,21 +523,8 @@ app.get('/logout', (req, res) => {
 });
 
 
-app.post('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            return res.status(500).send('Logout failed');
-        }
-        res.redirect('/home');
-    });
-});
-function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
-        return next();
-    } else {
-        res.status(401).json({ message: 'Unauthorized' });
-    }
-}
+
+
 
 cron.schedule('* * * * *', async () => {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -534,7 +532,7 @@ cron.schedule('* * * * *', async () => {
     console.log('Old OTPs deleted');
 });
 
-app.get('/createdrive',isAuthenticated, (req, res) => {
+app.get('/createdrive', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'createdrive.html'));
 });
 
@@ -553,10 +551,7 @@ app.post('/create-drive', async (req, res) => {
         res.status(500).json({ message: 'Error inserting drive data' });
     }
 });
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    next();
-});
+
 app.get('/check-session', (req, res) => {
     if (req.session.userId) {
         res.status(200).json({ message: 'Session active', id: req.session.userId });
@@ -567,23 +562,21 @@ app.get('/check-session', (req, res) => {
 
 
 
-app.get('/rechome', isAuthenticated,(req, res) => {
-cron.schedule('0 0 * * *', async () => { 
-    try {
-        const now = new Date();
-        const cutoffDate = new Date(now.setDate(now.getDate())); // 30 days ago
+app.get('/rechome',(req, res) => {
+// cron.schedule('0 0 * * *', async () => { 
+//     try {
+//         const now = new Date();
+//         const cutoffDate = new Date(now.setDate(now.getDate())); // 30 days ago
 
-        await Drive.deleteMany({ dateOfDrive: { $lt: cutoffDate } });
-    } catch (error) {
-        console.error('Error deleting old drives:', error);
-    }
-});
+//         await Drive.deleteMany({ dateOfDrive: { $lt: cutoffDate } });
+//     } catch (error) {
+//         console.error('Error deleting old drives:', error);
+//     }
+// });
+res.sendFile(path.join(__dirname, 'public', 'rechome.html'));
 });
 
-app.get('/rechome', (req, res) => {
 
-    res.sendFile(path.join(__dirname, 'public', 'rechome.html'));
-});
 
 app.get('/recforgotpw', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'recforgotpw.html'));
@@ -650,11 +643,11 @@ app.post('/rec-change-password', async (req, res) => {
     }
 });
 
-app.get('/drivedetails',isAuthenticated, (req, res) => {
+app.get('/drivedetails', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'drivedetails.html'));
 });
 
-app.get('/verifierhome',isAuthenticated, (req, res) => {
+app.get('/verifierhome',(req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierHome.html'));
 });
 
@@ -664,28 +657,87 @@ app.get('/verifierDrive', (req, res) => {
 app.get('/verifierCreate', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierCreate.html'));
 });
-app.get('/stuDrive',isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'stuDrive.html'));
+
+app.post('/setDrive', async (req, res) => {
+    try {
+        const { driveId } = req.body;
+
+        if (!driveId) {
+            return res.status(400).json({ error: 'Drive ID is required' });
+        }
+
+        // Store the selected drive ID in session
+        req.session.selectedDriveId = driveId;
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error setting drive ID:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
-app.get('/recdrives', async (req, res) => {
+// Endpoint to display the selected drive details
+// app.get('/stuDrive', async (req, res) => {
+//     try {
+//         const driveId = req.session.selectedDriveId; // Retrieve the drive ID from session
+//         const userId = req.session.userId; // Assuming session holds the necessary user ID
 
+//         if (!driveId || !userId) {
+//             return res.status(400).json({ error: 'Missing drive ID or user ID' });
+//         }
+
+//         // Fetch the drive details from the database
+//         const drivesCollection = db.collection('drives');
+//         const verifierDriveCollection = db.collection('verifierDrives');
+
+//         const drive = await drivesCollection.findOne({ _id: new ObjectId(driveId) }) || 
+//                       await verifierDriveCollection.findOne({ _id: new ObjectId(driveId) });
+
+//         if (!drive) {
+//             return res.status(404).json({ error: 'Drive not found' });
+//         }
+
+//         // Render or return drive details
+//         res.json({ drive, user: { isApplied: false } }); // Example user object
+//     } catch (error) {
+//         console.error('Error fetching drive details:', error);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
+
+
+
+
+app.get('/recdrives', async (req, res) => {
     try {
+        const recId = req.session.userId; // Assuming userId in session holds recruiter ID or any other relevant ID
+
+        // Fetch the drives and verifier drives from their respective collections
         const drivesCollection = db.collection('drives');
+        const verifierDriveCollection = db.collection('verifierDrives');
+
         const drives = await drivesCollection.find({}).toArray();
-        const verifierDriveCollection = db.collection('verifierDrives')
         const verifierDrives = await verifierDriveCollection.find({}).toArray();
 
+        // Combine and sort drives by dateOfDrive
         const combined_drives = [...drives, ...verifierDrives].sort((a, b) => {
             const dateA = new Date(a.dateOfDrive);
             const dateB = new Date(b.dateOfDrive);
             return dateA - dateB;
         });
-        res.json(combined_drives);
+
+        // Send both the combined drives and the user ID as part of the response
+        res.json({
+            combined_drives: combined_drives,
+            userId: recId, // Including the user ID in the response
+        });
     } catch (error) {
+        console.error('Error fetching drives:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
 
 app.get('/recdrivesList/:id', async (req, res) => {
     const recId = req.params.id;
@@ -728,56 +780,68 @@ app.get('/', async (req, res) => {
 
 
 
-app.get('/recdrives/:id', async (req, res) => {
-    const driveId = req.params.id;
+app.get('/recdrives/details', async (req, res) => {
     try {
+        const driveId = req.session.selectedDriveId; // Retrieve the drive ID from session
+        const recId = req.session.userId; // Retrieve recruiter ID from session
+
+        if (!driveId || !recId) {
+            return res.status(400).json({ error: 'Missing drive ID or user ID' });
+        }
+
+        // Validate drive ID
         if (!ObjectId.isValid(driveId)) {
-            return res.status(400).send('Invalid drive ID');
+            return res.status(400).json({ error: 'Invalid drive ID' });
         }
 
         const drivesCollection = db.collection('drives');
-        const recruitersCollection = db.collection('recruiters');
         const verifierDriveCollection = db.collection('verifierDrives');
+        const recruitersCollection = db.collection('recruiters');
 
+        // Fetch the drive details from both collections
         let drive = await drivesCollection.findOne({ _id: new ObjectId(driveId) });
         if (!drive) {
             drive = await verifierDriveCollection.findOne({ _id: new ObjectId(driveId) });
         }
 
         if (!drive) {
-            return res.status(404).send('Drive not found');
+            return res.status(404).json({ error: 'Drive not found' });
         }
 
+        // Fetch the recruiter details associated with the drive
         let user = await recruitersCollection.findOne({ _id: new ObjectId(drive.recid) });
         if (!user) {
             user = await recruitersCollection.findOne({ email: drive.email });
         }
 
+        // Send the drive and recruiter details
         res.json({ drive, user });
     } catch (error) {
         console.error('Error fetching drive details:', error);
-        res.status(500).send('Error fetching drive details');
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 
-app.put('/recdrives/:id/status', async (req, res) => {
-    const driveId = req.params.id;
+
+app.put('/recdrives/status', async (req, res) => {
     const { status } = req.body;
+    const driveId = req.session.selectedDriveId; // Retrieve the drive ID from session
 
     try {
-        if (!ObjectId.isValid(driveId)) {
+        if (!driveId || !ObjectId.isValid(driveId)) {
             return res.status(400).send('Invalid drive ID');
         }
 
-        let update = {};
-        if (status === 'accepted') {
-            update = { isAccepted: true, isRejected: false };
-        } else if (status === 'rejected') {
-            update = { isRejected: true, isAccepted: false };
-        } else {
+        if (status !== 'accepted' && status !== 'rejected') {
             return res.status(400).send('Invalid status');
         }
+
+        // Prepare update object based on status
+        const update = {
+            isAccepted: status === 'accepted',
+            isRejected: status === 'rejected'
+        };
 
         const drivesCollection = db.collection('drives');
         const result = await drivesCollection.updateOne(
@@ -791,9 +855,11 @@ app.put('/recdrives/:id/status', async (req, res) => {
 
         res.send('Drive status updated');
     } catch (error) {
+        console.error('Error updating drive status:', error);
         res.status(500).send('Error updating drive status');
     }
 });
+
 
 
 app.post('/create-verifier-drive', async (req, res) => {
@@ -842,7 +908,7 @@ app.post('/api/saveProfile', upload.single('profilePicture'), (req, res) => {
 
 
 
-app.get('/stuhome',isAuthenticated, (req, res) => {
+app.get('/stuhome', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuhome.html'));
 });
 
@@ -870,44 +936,83 @@ app.post('/update-stu-profile', upload.single('profilePicture'), async (req, res
 });
 
 
-app.get('/studrives', async (req, res) => {
-    const stuId = req.query.sid;
-    const driveId = req.query.id;
+// app.get('/studrives', async (req, res) => {
+//     const stuId = req.session.userId;  // Fetch student ID from session
+//     const driveId = req.session.selectedDriveId;  // Fetch drive ID from session
 
+//     try {
+//         if (!ObjectId.isValid(stuId) || !ObjectId.isValid(driveId)) {
+//             return res.status(400).send('Invalid student or drive ID');
+//         }
+
+//         const drivesCollection = db.collection('drives');
+//         const verifierDriveCollection = db.collection('verifierDrives');
+//         const consentCollection = db.collection('consents');
+
+//         // Fetch the user consent details
+//         let user = await consentCollection.findOne({ studentId: stuId, driveId: driveId });
+
+//         // Fetch the drive details
+//         let drive = await drivesCollection.findOne({ _id: new ObjectId(driveId) });
+//         if (!drive) {
+//             drive = await verifierDriveCollection.findOne({ _id: new ObjectId(driveId) });
+//         }
+
+//         if (!drive) {
+//             return res.status(404).send('Drive not found');
+//         }
+
+//         // Return the drive and user details
+//         res.json({ drive, user });
+//     } catch (error) {
+//         console.error('Error fetching drive details:', error);
+//         res.status(500).send('Error fetching drive details');
+//     }
+// });
+app.get('/stuDrive', async (req, res) => {
     try {
-        if (!ObjectId.isValid(stuId)) {
-            return res.status(400).send('Invalid drive ID');
+        const driveId = req.session.selectedDriveId; // Retrieve the drive ID from session
+        const userId = req.session.userId; // Retrieve the user ID from session
+
+        console.log('Drive ID:', driveId); // Log drive ID
+        console.log('User ID:', userId);   // Log user ID
+
+        if (!driveId || !userId) {
+            return res.status(400).json({ error: 'Missing drive ID or user ID' });
         }
 
         const drivesCollection = db.collection('drives');
-        // const studentsCollection = db.collection('students');
         const verifierDriveCollection = db.collection('verifierDrives');
         const consentCollection = db.collection('consents');
 
-        let user = await consentCollection.findOne({ studentId: stuId, driveId: driveId });
-
+        // Fetch drive details from both collections
         let drive = await drivesCollection.findOne({ _id: new ObjectId(driveId) });
         if (!drive) {
             drive = await verifierDriveCollection.findOne({ _id: new ObjectId(driveId) });
         }
 
         if (!drive) {
-            return res.status(404).send('Drive not found');
+            return res.status(404).json({ error: 'Drive not found' });
         }
 
-        res.json({ drive, user });
+        const user = await consentCollection.findOne({ studentId: userId, driveId: driveId }) || { isApplied: false };
+
+        // console.log(drive)
+        // console.log(user)
+        res.json( {drive, user} );
     } catch (error) {
         console.error('Error fetching drive details:', error);
-        res.status(500).send('Error fetching drive details');
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
+
 app.get('/studrivesList', async (req, res) => {
-    const stuId = req.query.id; // Extracting student ID from query parameters
+    const stuId = req.session.userId; // Fetching student ID from session
     try {
         const drivesCollection = db.collection('drives');
         const consentCollection = db.collection('consents');
-        const verifierDriveCollection = db.collection('verifierDrives')
+        const verifierDriveCollection = db.collection('verifierDrives');
 
         // Find consents by student ID
         const studrives = await consentCollection.find({ studentId: stuId }).toArray();
@@ -933,50 +1038,50 @@ app.get('/studrivesList', async (req, res) => {
     } catch (error) {
         console.error('Error fetching drives:', error);
         res.status(500).json({ error: 'Internal Server Error' });
-    }
+    }   
 });
 
+
 app.get('/stuProfileDetails', async (req, res) => {
-    const stuId = req.query.id;
     try {
-        // console.log(stuId);
-        if (!ObjectId.isValid(stuId)) {
-            return res.status(400).json({ error: 'Invalid profile ID' });
+        const stuId = req.session.stuId; // Retrieve the student ID from the session
+
+        if (!stuId) {
+            return res.status(400).json({ error: 'Missing student ID' });
         }
 
-        const profilesCollection = db.collection('profiles');
-
-        let profile = await profilesCollection.findOne({ studentId: stuId });
+        const studentsCollection = db.collection('students');
+        const profile = await studentsCollection.findOne({ _id: new ObjectId(stuId) });
 
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
         }
 
-        // console.log(profile);
-
         res.json(profile);
     } catch (error) {
         console.error('Error fetching profile details:', error);
-        res.status(500).json({ error: 'Error fetching profile details' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
 
 
 app.get('/', async (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'home.html'));
 });
 
-app.get('/stuAppliedJobs',isAuthenticated, async (rew, res) => {
+app.get('/stuAppliedJobs', async (rew, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuAppliedJobs.html'));
 })
-app.get('/homestu',isAuthenticated, async (rew, res) => {
+app.get('/homestu', async (rew, res) => {
     res.sendFile(path.join(__dirname, 'public', 'homestu.html'));
 })
-app.get('/homerec',isAuthenticated, async (rew, res) => {
+app.get('/homerec', async (rew, res) => {
     res.sendFile(path.join(__dirname, 'public', 'homerec.html'));
 })
 
-app.get('/stuConsentForm',isAuthenticated, async (req, res) => {
+app.get('/stuConsentForm', async (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuConsentForm.html'));
 })
 

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manipal University - Drives Detail</title>
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
     <link rel="stylesheet" href="stuDrive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -53,75 +54,88 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', fetchDriveDetails);
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const driveId = urlParams.get('did');
-        const stuId = urlParams.get('sid');
-        
-        document.getElementById('home-btn').addEventListener('click', () => {
-            window.location.href = `/homestu?id=${stuId}`;
-        })
-        document.getElementById('jobs-btn').addEventListener('click', () => {
-            window.location.href = `/stuhome?id=${stuId}`;
-        })
-
-        document.getElementById('applied-jobs').addEventListener('click', () => {
-            window.location.href = `/stuAppliedJobs?id=${stuId}`
-        });
-
-        document.getElementById('profile-btn').addEventListener('click', () => {
-            window.location.href = `/stuProfile?id=${stuId}`
-        });
-
         document.addEventListener('DOMContentLoaded', async () => {
-           
-        
-            if (stuId) {
-                try {
-                    const response = await fetch(`/student/${stuId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        document.getElementById('studentName').textContent = `${data.name}`;
+    // Fetch drive details
+    fetchDriveDetails();
 
-                    } else {
-                        document.getElementById('studentName').textContent = 'Student not found';
-                    }
-                } catch (error) {
-                    console.error('Error fetching student details:', error);
-                    document.getElementById('studentName').textContent = 'Error fetching student details';
-                }
-            } else {
-                document.getElementById('studentName').textContent = 'No student ID provided';
-            }
-        });
+    try {
+        const response = await fetch('/api/getUserId');
+        const data = await response.json();
 
-        async function fetchDriveDetails() {
+        if (data.userId) {
+            const stuId = data.userId;
+
+            // Set up navigation button listeners
+            document.getElementById('jobs-btn').addEventListener('click', () => {
+                window.location.href = `/stuhome`;
+            });
+
+            document.getElementById('home-btn').addEventListener('click', () => {
+                window.location.href = `/homestu`;
+            });
+
+            document.getElementById('applied-jobs').addEventListener('click', () => {
+                window.location.href = `/stuAppliedjobs`;
+            });
+
+            const profile = document.getElementById('profile-btn');
+            profile.addEventListener('click', () => {
+                window.location.href = `/stuProfile`;
+            });
+
+            // Fetch and display student name
             try {
-                const response = await fetch(`/studrives?id=${driveId}&sid=${stuId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch drive details');
+                const studentResponse = await fetch(`/student/${stuId}`);
+                if (studentResponse.ok) {
+                    const studentData = await studentResponse.json();
+                    document.getElementById('studentName').textContent = `${studentData.name}!`;
+                } else {
+                    document.getElementById('studentName').textContent = 'Student not found';
                 }
-                const { drive, user } = await response.json();
-                renderDriveDetails(drive, user);
             } catch (error) {
-                console.error('Error fetching drive details:', error);
-                // Handle error display or retry logic
+                console.error('Error fetching student details:', error);
+                document.getElementById('studentName').textContent = 'Error fetching student details';
             }
+        } else {
+            // Redirect to login if user is not logged in
+            window.location.href = '/login1';
+        }
+    } catch (error) {
+        console.error('Error fetching user ID:', error);
+        window.location.href = '/login1';
+    }
+});
+
+async function fetchDriveDetails() {
+    try {
+        console.log("hiii");
+
+        // const response = await fetch('/stuDrive'); // Fetch drive details from the backend
+        console.log("hiii");
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch drive details');
         }
 
-        function renderDriveDetails(drive, user) {
-            const driveDetailsContainer = document.getElementById('drive-details');
-            if (!drive || Object.keys(drive).length === 0) {
-                driveDetailsContainer.innerHTML = '<tr><td colspan="2">Error: Drive details not found or incomplete.</td></tr>';
-                return;
-            }
+        const { drive, user } = await response.json();
+        renderDriveDetails(drive, user);
+    } catch (error) {
+        console.error('Error fetching drive details:', error);
+    }
+}
 
-            driveDetailsContainer.innerHTML = `
+function renderDriveDetails(drive, user) {
+    const driveDetailsContainer = document.getElementById('drive-details');
+    if (!drive || Object.keys(drive).length === 0) {
+        driveDetailsContainer.innerHTML = '<tr><td colspan="2">Error: Drive details not found or incomplete.</td></tr>';
+        return;
+    }
+
+    driveDetailsContainer.innerHTML = `
         <tr>
             <th style="vertical-align: top;">Designations</th>
             <td style="vertical-align: top;">
-                <ul style="list-style-type:disc; margin:0; padding-left: 15px">
+                <ul style="list-style-type: disc; margin: 0; padding-left: 15px;">
                     ${drive.designations.map(designation => `<li style="padding-bottom: 7px;">${designation}</li>`).join('')}
                 </ul>
             </td>
@@ -141,7 +155,7 @@
         <tr>
             <th style="vertical-align: top;">Programs</th>
             <td style="vertical-align: top;">
-                <ul style="list-style-type:disc; margin:0; padding-left: 15px">
+                <ul style="list-style-type: disc; margin: 0; padding-left: 15px;">
                     ${drive.programs.map(program => `<li style="padding-bottom: 7px;">${program}</li>`).join('')}
                 </ul>
             </td>
@@ -149,7 +163,7 @@
         <tr>
             <th>Criteria</th>
             <td>
-                <ul style="list-style-type:none; margin:0; padding:0">
+                <ul style="list-style-type: none; margin: 0; padding: 0;">
                     <li style="padding-bottom: 10px;"><b>Max Backlogs:</b> ${drive.backlogs}</li>
                     <li><b>CGPA :</b> ${drive.cgpa}</li>
                 </ul>
@@ -159,21 +173,40 @@
             <th>Description</th>
             <td>${drive.jobDescription}</td>
         </tr>
-        `;
+    `;
 
-            if (user.isApplied) {
-                const applyBtn = document.getElementById('apply-btn');
-                applyBtn.innerHTML = 'Applied';
-                applyBtn.style.backgroundColor = 'green';
-                applyBtn.disabled = true;
-                applyBtn.style.cursor='no-drop'
-            }
-        }
+    if (user.isApplied) {
+        const applyBtn = document.getElementById('apply-btn');
+        applyBtn.innerHTML = 'Applied';
+        applyBtn.style.backgroundColor = 'green';
+        applyBtn.disabled = true;
+        applyBtn.style.cursor = 'not-allowed';
+    }
+}
 
+        
+        // Fetch drive details when the page loads
+        fetchDriveDetails();
+        
         document.getElementById('apply-btn').addEventListener('click', () => {
-            window.location.href = `/stuConsentForm?did=${driveId}&sid=${stuId}`;
-        })
-
+            fetch('/stuConsentForm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/stuConsentForm';
+                } else {
+                    console.error('Failed to navigate to consent form');
+                }
+            }).catch(error => {
+                console.error('Error during navigation:', error);
+            });
+        });
+        
+        
+        
         document.addEventListener('DOMContentLoaded', () => {
             const logoutBtn = document.querySelector('#logout-btn'); // Assuming there's a logout button with this ID
         

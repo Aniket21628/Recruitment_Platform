@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login</title>
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
     <link rel="stylesheet" href="stuProfile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -71,8 +72,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const stuId = urlParams.get('id');
+       
         document.addEventListener('DOMContentLoaded', fetchProfileDetails);
 
         function toggleEditMode() {
@@ -89,24 +89,24 @@
 
         async function fetchProfileDetails() {
             try {
-                const response = await fetch(`/stuProfileDetails?id=${stuId}`);
+                const response = await fetch('/stuProfileDetails'); // No need for URL params
                 if (!response.ok) {
                     if (response.status === 404) {
                         toggleEditMode();
-                    }
-                    else {
+                    } else {
                         throw new Error('Failed to fetch profile details');
                     }
                 }
-
+        
                 const profile = await response.json();
-                displayProfileDetails(profile)
-
+                console.log(profile);
+                displayProfileDetails(profile);
             } catch (error) {
                 console.error('Error fetching profile details:', error);
                 // Handle error display or retry logic
             }
         }
+        
 
         async function displayProfileDetails(profile) {
             const profileContainer = document.getElementById('view-mode-table');
@@ -238,6 +238,10 @@
 
             const form = document.getElementById('profileForm');
             const formData = new FormData(form);
+            if (!stuId) {
+                alert('Student ID is missing!');
+                return;
+            }
             formData.append('studentId', stuId);
 
             const requiredFields = [
@@ -282,7 +286,8 @@
                 document.getElementById('viewNationality').textContent = data.Nationality;
 
                 // Update other fields similarly
-
+               
+        
                 // Toggle view mode back
                 toggleEditMode();
             } catch (error) {
@@ -294,35 +299,62 @@
         
       
 
-        document.getElementById('applied-jobs').addEventListener('click', () => {
-            window.location.href = `/stuAppliedJobs?id=${stuId}`;
-        })
-
-        document.getElementById('home-btn').addEventListener('click', () => {
-            window.location.href = `/homestu?id=${stuId}`;
-        })
-        document.getElementById('jobs-btn').addEventListener('click', () => {
-            window.location.href = `/stuhome?id=${stuId}`;
-        })
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/getUserId')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.userId) {
+                        const stuId = data.userId;
+        
+                        document.getElementById('jobs-btn').addEventListener('click', () => {
+                            window.location.href = `/stuhome`;
+                        });
+        
+                        document.getElementById('home-btn').addEventListener('click', () => {
+                            window.location.href = `/homestu`;
+                        });
+                        document.getElementById('applied-jobs').addEventListener('click', () => {
+                            window.location.href = `/stuAppliedjobs`;
+                        });
+        
+                    } else {
+                        // Handle the case where the user is not logged in
+                        window.location.href = '/login1';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user ID:', error);
+                    window.location.href = '/login1';
+                });
+        });
+        
 
         document.addEventListener('DOMContentLoaded', async () => {
-           
+            try {
+                const response = await fetch('/api/getUserId');
+                const data = await response.json();
         
-            if (stuId) {
-                try {
-                    const response = await fetch(`/student/${stuId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        document.getElementById('studentName').textContent = `${data.name}`;
-                    } else {
-                        document.getElementById('studentName').textContent = 'Student not found';
+                if (data.userId) {
+                    const stuId = data.userId;
+        
+                    try {
+                        const studentResponse = await fetch(`/student/${stuId}`);
+                        if (studentResponse.ok) {
+                            const studentData = await studentResponse.json();
+                            document.getElementById('studentName').textContent = ` ${studentData.name}`;
+                        } else {
+                            document.getElementById('studentName').textContent = 'Student not found';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching student details:', error);
+                        document.getElementById('studentName').textContent = 'Error fetching student details';
                     }
-                } catch (error) {
-                    console.error('Error fetching student details:', error);
-                    document.getElementById('studentName').textContent = 'Error fetching student details';
+                } else {
+                    document.getElementById('studentName').textContent = 'No student ID provided';
                 }
-            } else {
-                document.getElementById('studentName').textContent = 'No student ID provided';
+            } catch (error) {
+                console.error('Error fetching user ID:', error);
+                document.getElementById('studentName').textContent = 'Error fetching user ID';
             }
         });
         document.addEventListener('DOMContentLoaded', () => {

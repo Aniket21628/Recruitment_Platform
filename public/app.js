@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     // localStorage.setItem('token', data.token);
                     alert('Login successful!');
-                    window.location.href = `/stuhome?id=${result.id}`; 
+                    window.location.href = `/stuhome`; 
                 } else {
                     alert(`Login failed: ${result.message}`);
                 }
