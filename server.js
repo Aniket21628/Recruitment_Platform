@@ -11,9 +11,11 @@ const { log } = require('console');
 const cron = require('node-cron');
 const { ObjectId } = require('mongodb');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
+
 // const jwt = require('jsonwebtoken');
 
-let loggedIn = false;
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -46,7 +48,13 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-
+app.use(session({
+    secret: 'your-secret-key', // Replace with a strong secret
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({ mongoUrl: mongoUri  }), // Update with your MongoDB connection string
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 1 day
+}));
 
 //home page
 app.get('/', (req, res) => {
@@ -101,12 +109,46 @@ app.post('/login1', async (req, res) => {
 
         // Authentication successful
         // const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '3h' });
-        loggedIn = true;
+        req.session.userId = user._id;
+        req.session.email = user.email;
         res.status(200).json({ message: 'Login successful', id: user._id });
     } catch (error) {
         res.status(500).json({ message: 'Error logging in', error });
     }
 });
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error logging out', error: err });
+        }
+        res.clearCookie('connect.sid'); // This clears the session cookie
+        res.status(200).json({ message: 'Logout successful' });
+    });
+});
+app.get('/check-session', (req, res) => {
+    if (req.session.userId) {
+        res.status(200).json({ message: 'Session active', id: req.session.userId });
+    } else {
+        res.status(401).json({ message: 'Session inactive' });
+    }
+});
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Logout failed');
+        }
+        res.redirect('/home');
+    });
+});
+
+function isAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return next();
+    } else {
+        res.status(401).json({ message: 'Unauthorized' });
+    }
+}
 
 // Route to serve the signup page
 app.get('/signup', (req, res) => {
@@ -114,6 +156,10 @@ app.get('/signup', (req, res) => {
 });
 
 app.get('/login1', (req, res) => {
+    if (req.session.userId) {
+        // If the user is already logged in, redirect to the rechome page
+        return res.redirect(`/stuhome?id=${req.session.userId}`);
+    }
     res.sendFile(path.join(__dirname, 'public', 'login1.html'));
 });
 
@@ -122,10 +168,19 @@ app.get('/rsignup', (req, res) => {
 })
 
 app.get('/rlogin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'rlogin.html'))
+    if (req.session.userId) {
+        // If the user is already logged in, redirect to the rechome page
+        return res.redirect(`/rechome?id=${req.session.userId}`);
+    }
+        res.sendFile(path.join(__dirname,'public', 'rlogin.html'));
+    
 })
 
 app.get('/cologin', (req, res) => {
+    if (req.session.userId) {
+        // If the user is already logged in, redirect to the rechome page
+        return res.redirect(`/verifierhome?id=${req.session.userId}`);
+    }
     res.sendFile(path.join(__dirname, 'public', 'cologin.html'))
 })
 
@@ -220,39 +275,41 @@ app.post('/rlogin', async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
         // Authentication successful
+        req.session.userId = user._id;
+        req.session.email = user.email;
         res.status(200).json({ message: 'Login successful', id: user._id });
     } catch (error) {
         res.status(500).json({ message: 'Error logging in', error });
     }
 });
 
-app.post('/cologin', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        // Find the user by email
-        const verifierCollection = db.collection('coordinator')
-        const user = await verifierCollection.findOne({ email });
-
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error logging out', error: err });
         }
-
-        // Compare the entered password with the hashed password
-        // const isMatch = await bcrypt.compare(password, user.password);
-        if (password !== user.password) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        // if (!isMatch) {
-        //     return res.status(400).json({ message: 'Invalid email or password' });
-        // }
-        // Authentication successful
-        res.status(200).json({ message: 'Login successful', id: user._id });
-    } catch (error) {
-        res.status(500).json({ message: 'Error logging in', error });
-    }
+        res.clearCookie('connect.sid'); // This clears the session cookie
+        res.status(200).json({ message: 'Logout successful' });
+    });
 });
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Logout failed');
+        }
+        res.redirect('/home');
+    });
+});
+
+function isAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return next();
+    } else {
+        res.status(401).json({ message: 'Unauthorized' });
+    }
+}
+
 
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -267,23 +324,9 @@ app.get('/reset-password', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'changepw.html'));
 });
 
-app.get('/stuhome', (req, res) => {
-    // const email = req.query.email;
 
-    if(loggedIn){
-        res.sendFile(path.join(__dirname, 'public', 'stuhome.html'));
-    }
-    else{
-        res.sendFile(path.join(__dirname, 'public', 'login1.html'))
-    }
-});
 
-app.get('/logout1', (req,res) => {
-    loggedIn = false;
-    res.status(200).json("Logged out successfully");
-});
-
-app.get('/stuProfile', (req, res) => {
+app.get('/stuProfile',isAuthenticated, (req, res) => {
     // const email = req.query.email;
     res.sendFile(path.join(__dirname, 'public', 'stuProfile.html'));
 });
@@ -432,11 +475,13 @@ app.post('/change-password', async (req, res) => {
 
 app.post('/cologin', async (req, res) => {
     const { email, password } = req.body;
-
+    
     try {
         // Find the user by email
         const coordinatorCollection = db.collection('coordinator');
         const user = await coordinatorCollection.findOne({ email });
+
+        
 
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
@@ -444,17 +489,44 @@ app.post('/cologin', async (req, res) => {
 
         // Compare the entered password with the hashed password
         const isMatch = await bcrypt.compare(password, user.password);
-
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
-
-        res.status(200).json({ message: 'Login successful' });
+        req.session.userId = user._id;
+        req.session.email = user.email;
+        res.status(200).json({ message: 'Login successful',id:user._id });
     } catch (error) {
         res.status(500).json({ message: 'Error logging in', error });
     }
 });
 
+
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error logging out', error: err });
+        }
+        res.clearCookie('connect.sid'); // This clears the session cookie
+        res.status(200).json({ message: 'Logout successful' });
+    });
+});
+
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Logout failed');
+        }
+        res.redirect('/home');
+    });
+});
+function isAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return next();
+    } else {
+        res.status(401).json({ message: 'Unauthorized' });
+    }
+}
 
 cron.schedule('* * * * *', async () => {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -462,7 +534,7 @@ cron.schedule('* * * * *', async () => {
     console.log('Old OTPs deleted');
 });
 
-app.get('/createdrive', (req, res) => {
+app.get('/createdrive',isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'createdrive.html'));
 });
 
@@ -481,8 +553,35 @@ app.post('/create-drive', async (req, res) => {
         res.status(500).json({ message: 'Error inserting drive data' });
     }
 });
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+});
+app.get('/check-session', (req, res) => {
+    if (req.session.userId) {
+        res.status(200).json({ message: 'Session active', id: req.session.userId });
+    } else {
+        res.status(401).json({ message: 'Session inactive' });
+    }
+});
+
+
+
+app.get('/rechome', isAuthenticated,(req, res) => {
+cron.schedule('0 0 * * *', async () => { 
+    try {
+        const now = new Date();
+        const cutoffDate = new Date(now.setDate(now.getDate())); // 30 days ago
+
+        await Drive.deleteMany({ dateOfDrive: { $lt: cutoffDate } });
+    } catch (error) {
+        console.error('Error deleting old drives:', error);
+    }
+});
+});
 
 app.get('/rechome', (req, res) => {
+
     res.sendFile(path.join(__dirname, 'public', 'rechome.html'));
 });
 
@@ -551,11 +650,11 @@ app.post('/rec-change-password', async (req, res) => {
     }
 });
 
-app.get('/drivedetails', (req, res) => {
+app.get('/drivedetails',isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'drivedetails.html'));
 });
 
-app.get('/verifierHome', (req, res) => {
+app.get('/verifierhome',isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierHome.html'));
 });
 
@@ -565,7 +664,7 @@ app.get('/verifierDrive', (req, res) => {
 app.get('/verifierCreate', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierCreate.html'));
 });
-app.get('/stuDrive', (req, res) => {
+app.get('/stuDrive',isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuDrive.html'));
 });
 
@@ -867,13 +966,10 @@ app.post('/api/saveProfile', upload.single('profilePicture'), (req, res) => {
     res.json({ message: 'Profile updated successfully', data: { name, college, profilePicture } });
 });
 
-app.get('/rechome', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'rechome.html'));
-});
 
 
 
-app.get('/stuHome', (req, res) => {
+app.get('/stuhome',isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuhome.html'));
 });
 
@@ -997,11 +1093,17 @@ app.get('/', async (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'home.html'));
 });
 
-app.get('/stuAppliedJobs', async (rew, res) => {
+app.get('/stuAppliedJobs',isAuthenticated, async (rew, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuAppliedJobs.html'));
 })
+app.get('/homestu',isAuthenticated, async (rew, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'homestu.html'));
+})
+app.get('/homerec',isAuthenticated, async (rew, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'homerec.html'));
+})
 
-app.get('/stuConsentForm', async (req, res) => {
+app.get('/stuConsentForm',isAuthenticated, async (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuConsentForm.html'));
 })
 
