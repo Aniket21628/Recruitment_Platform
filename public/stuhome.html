@@ -7,9 +7,44 @@
     <title>Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             background-color: #f5f5f5;
+        }
+
+        #backToTopBtn {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Fixed position */
+            bottom: 20px;
+            /* Place the button at the bottom of the page */
+            right: 20px;
+            /* Place the button on the right side */
+            z-index: 99;
+            /* Make sure it does not overlap other content */
+            font-size: 18px;
+            /* Increase font size */
+            border: none;
+            /* Remove borders */
+            outline: none;
+            /* Remove outline */
+            background-color: #140878;
+            /* Set background color */
+            color: white;
+            /* Set text color */
+            cursor: pointer;
+            /* Add a mouse pointer on hover */
+            padding: 15px;
+            /* Some padding */
+            border-radius: 40%;
+            /* Rounded button */
+        }
+
+        #backToTopBtn:hover {
+            background-color: #0056b3;
+            /* Darker background on hover */
         }
 
         .sidebar {
@@ -156,7 +191,8 @@
         <div class="row">
             <nav class="col-md-2 d-none d-md-block sidebar">
                 <div class="text-center mb-4">
-                    <img src="images/logo-white-Photoroom.png" alt="University Logo" class="img-fluid mb-4" style="margin-top: 40px;">
+                    <img src="images/logo-white-Photoroom.png" alt="University Logo" class="img-fluid mb-4"
+                        style="margin-top: 40px;">
                     <a href="#"><i class="fas fa-home"></i> Home</a>
                     <a href="#" id="applied-jobs"><i class="fas fa-tasks"></i> Applied Jobs</a>
                     <a href="#" id="profile-btn"><i class="fas fa-user"></i> My Profile</a>
@@ -164,21 +200,21 @@
                 </div>
             </nav>
 
-
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <div class="dashboard-content">
                     <div
                         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2" id="studentName"></h1>
-
                     </div>
                     <h2 class="mt-4">Jobs</h2>
-                    <div id="job-cards-container" col-lg-12></div>
-
+                    <div id="job-cards-container" class="col-lg-12"></div>
                 </div>
             </main>
         </div>
     </div>
+
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -196,41 +232,161 @@
         profile.addEventListener('click', () => {
             window.location.href = `/stuProfile?id=${stuId}`;
         })
-        
-        
 
-        async function fetchDrives() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const recId = urlParams.get('id');
-            try {
-                const response = await fetch(`http://localhost:5500/recdrives`);
-                const combined_drives = await response.json();
 
-                renderDrives(combined_drives);
-            } catch (error) {
-                console.log('Error fetching drives:', error);
+        let backToTopBtn = document.getElementById("backToTopBtn");
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function () {
+            scrollFunction();
+        };
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
             }
         }
 
-        function renderDrives(combined_drives) {
+        // When the user clicks on the button, scroll to the top of the document
+        backToTopBtn.addEventListener("click", function () {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        });
+
+        // async function fetchDrives() {
+        //     const urlParams = new URLSearchParams(window.location.search);
+        //     const recId = urlParams.get('id');
+        //     try {
+        //         const response = await fetch(`http://localhost:5500/recdrives`);
+        //         const combined_drives = await response.json();
+
+        //         renderDrives(combined_drives);
+        //     } catch (error) {
+        //         console.log('Error fetching drives:', error);
+        //     }
+        // }
+
+        // function renderDrives(combined_drives) {
+        //     const jobsContainer = document.getElementById('job-cards-container');
+
+        //     jobsContainer.innerHTML = '';
+
+        //     const currentDate = new Date();
+
+        //     combined_drives.forEach((drive) => {
+        //         const driveDate = new Date(drive.dateOfDrive);
+        //         const daysDifference = (currentDate - driveDate) / (1000 * 60 * 60 * 24);
+
+        //         if (daysDifference > 90) {
+        //             return;
+        //         }
+
+        //         const driveElement = document.createElement('div');
+        //         driveElement.className = 'job-card';
+        //         driveElement.innerHTML = `
+        //             <h2>${drive.designations}</h2>
+        //             <p class="company-name">${drive.name}</p>
+        //             <br>
+        //             <p class="job-package">${drive.min} LPA - ${drive.max} LPA</p>
+        //             <br>
+        //             <p class="job-description">${drive.jobDescription}</p>
+        //             <div>
+        //                 <span class="job-type">${drive.jobType}</span>
+        //             </div>
+        //         `;
+
+        //         driveElement.addEventListener('click', () => {
+        //             goToDetails(drive._id);
+        //         });
+
+        //         jobsContainer.appendChild(driveElement);
+        //     });
+        // }
+
+        // function goToDetails(driveId) {
+
+        //     window.location.href = `/stuDrive?did=${driveId}&sid=${stuId}`;
+        // }
+
+
+        async function fetchDrives() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const stuId = urlParams.get('id');
+                const response = await fetch('http://localhost:5500/recdrives');
+                const combined_drives = await response.json();
+
+                renderDrives(combined_drives, stuId);
+            } catch (error) {
+                console.error('Error fetching drives:', error);
+            }
+        }
+
+        function notifyNewJobs(newDrives) {
+            if (newDrives.length === 0) return;
+
+            let index = 0;
+
+            function showNextNotification() {
+                const drive = newDrives[index];
+                Swal.fire({
+                    title: 'New Job Posted!',
+                    text: `${drive.designations.join(", ")} at ${drive.name}`,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'View Details',
+                    cancelButtonText: 'Close'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        goToDetails(drive._id);
+                    }
+
+                    index++;
+                    if (index < newDrives.length) {
+                        showNextNotification();
+                    }
+                });
+            }
+
+            showNextNotification();
+        }
+
+        function renderDrives(combined_drives, userId) {
             const jobsContainer = document.getElementById('job-cards-container');
 
             jobsContainer.innerHTML = '';
 
             const currentDate = new Date();
+            const newAcceptedDrives = [];
 
-            combined_drives.forEach((drive) => {
-                const driveDate = new Date(drive.dateOfDrive);
-                const daysDifference = (currentDate - driveDate) / (1000 * 60 * 60 * 24);
+            fetch(`/notifiedDrives/${userId}`)
+                .then(response => response.json())
+                .then(previousNotifiedDrives => {
+                    combined_drives.forEach((drive) => {
+                        if (!drive.isAccepted) {
+                            return; // Skip drives that are not accepted
+                        }
 
-                if (daysDifference > 90) {
-                    return;
-                }
+                        const driveDate = new Date(drive.dateOfDrive);
+                        const daysDifference = (currentDate - driveDate) / (1000 * 60 * 60 * 24);
 
-                const driveElement = document.createElement('div');
-                driveElement.className = 'job-card';
-                driveElement.innerHTML = `
-                    <h2>${drive.designations}</h2>
+                        if (daysDifference > 90) {
+                            return;
+                        }
+
+                        const isNew = !previousNotifiedDrives.some(prevDriveId => prevDriveId === drive._id.toString());
+                        if (isNew) {
+                            newAcceptedDrives.push(drive);
+                        }
+
+                        const driveElement = document.createElement('div');
+                        driveElement.className = 'job-card';
+                        driveElement.innerHTML = `
+                    <h2>${drive.designations.join(", ")}</h2>
                     <p class="company-name">${drive.name}</p>
                     <br>
                     <p class="job-package">${drive.min} LPA - ${drive.max} LPA</p>
@@ -241,25 +397,43 @@
                     </div>
                 `;
 
-                driveElement.addEventListener('click', () => {
-                    goToDetails(drive._id);
-                });
+                        driveElement.addEventListener('click', () => {
+                            goToDetails(drive._id);
+                        });
 
-                jobsContainer.appendChild(driveElement);
-            });
+                        jobsContainer.appendChild(driveElement);
+                    });
+
+                    if (newAcceptedDrives.length > 0) {
+                        notifyNewJobs(newAcceptedDrives);
+                        updateNotifiedDrives(userId, newAcceptedDrives.map(drive => drive._id));
+                    }
+                })
+                .catch(error => console.error('Error fetching notified drives:', error));
         }
-        
+
+        function updateNotifiedDrives(userId, newDrives) {
+            fetch(`/notifiedDrives/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ newDrives })
+            }).catch(error => console.error('Error updating notified drives:', error));
+        }
+
         function goToDetails(driveId) {
-
-            window.location.href = `/stuDrive?did=${driveId}&sid=${stuId}`;
+            window.location.href = `/StuDrive?did=${driveId}&sid=${stuId}`;
         }
 
+        // Call fetchDrives to load drives when the page loads
+        // fetchDrives();
         // public/script.js
 
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const studentId = urlParams.get('id'); // Get the student ID from the URL params
-        
+
             if (studentId) {
                 try {
                     const response = await fetch(`/student/${studentId}`);
@@ -277,19 +451,7 @@
                 document.getElementById('studentName').textContent = 'No student ID provided';
             }
         });
-        
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            const response = await fetch('/logout1');
-            if(response.ok) {
-                // Redirect to login page
-                console.log("hii");
-                window.location.href = '/login1';
-            } else {
-                // Handle the error case
-                console.error('Logout failed');
-            }
-        });
-        
+
 
     </script>
 </body>

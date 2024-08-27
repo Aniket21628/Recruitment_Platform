@@ -9,7 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Basic validation
             if (!email || !password) {
-                alert('Please fill in all fields.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Fields',
+                    text: 'Please fill in all fields.',
+                });
                 return;
             }
 
@@ -31,15 +35,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert('Login successful!');
-                    // Redirect to another page if needed
-                    window.location.href = `/rechome?id=${result.id}`;
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Successful',
+                        text: 'You are being redirected...',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = `/rechome?id=${result.id}`;
+                    });
                 } else {
-                    alert(`Login failed: ${result.message}`);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: result.message,
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred during login. Please try again.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred during login. Please try again.',
+                });
             }
         });
     }

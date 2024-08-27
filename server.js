@@ -22,8 +22,8 @@ app.use(cors());
 // MongoDB connection
 const mongoUri = 'mongodb+srv://harsha:Harsha239874@cluster0.8vbog8c.mongodb.net/UserDB?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // `useNewUrlParser: true,
+    // useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000
 })
     .then(() => console.log('Connected to MongoDB'))
@@ -569,7 +569,7 @@ app.get('/stuDrive', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'stuDrive.html'));
 });
 
-app.get('/recdrives', async (req, res) => {
+app.get('/reccordrives', async (req, res) => {
 
     try {
         const drivesCollection = db.collection('drives');
@@ -629,7 +629,7 @@ app.get('/', async (req, res) => {
 
 
 
-app.get('/recdrives/:id', async (req, res) => {
+app.get('/reccordrives/:id', async (req, res) => {
     const driveId = req.params.id;
     try {
         if (!ObjectId.isValid(driveId)) {
@@ -662,7 +662,7 @@ app.get('/recdrives/:id', async (req, res) => {
 });
 
 
-app.put('/recdrives/:id/status', async (req, res) => {
+app.put('/reccordrives/:id/status', async (req, res) => {
     const driveId = req.params.id;
     const { status } = req.body;
 
@@ -696,6 +696,133 @@ app.put('/recdrives/:id/status', async (req, res) => {
     }
 });
 
+
+app.get('/recdrives', async (req, res) => {
+    try {
+        const drivesCollection = db.collection('drives');
+        const verifierDriveCollection = db.collection('verifierDrives');
+
+        // Fetch only the accepted drives
+        const drives = await drivesCollection.find({ isAccepted: true }).toArray();
+        const verifierDrives = await verifierDriveCollection.find({ isAccepted: true }).toArray();
+
+        const combined_drives = [...drives, ...verifierDrives].sort((a, b) => {
+            const dateA = new Date(a.dateOfDrive);
+            const dateB = new Date(b.dateOfDrive);
+            return dateA - dateB;
+        });
+
+        res.json(combined_drives);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Fetch details for a specific drive
+app.get('/recdrives/:id', async (req, res) => {
+    const driveId = req.params.id;
+    try {
+        if (!ObjectId.isValid(driveId)) {
+            return res.status(400).send('Invalid drive ID');
+        }
+
+        const drivesCollection = db.collection('drives');
+        const recruitersCollection = db.collection('recruiters');
+        const verifierDriveCollection = db.collection('verifierDrives');
+
+        let drive = await drivesCollection.findOne({ _id: new ObjectId(driveId) });
+        if (!drive) {
+            drive = await verifierDriveCollection.findOne({ _id: new ObjectId(driveId) });
+        }
+
+        if (!drive) {
+            return res.status(404).send('Drive not found');
+        }
+
+        let user = await recruitersCollection.findOne({ _id: new ObjectId(drive.recid) });
+        if (!user) {
+            user = await recruitersCollection.findOne({ email: drive.email });
+        }
+
+        res.json({ drive, user });
+    } catch (error) {
+        console.error('Error fetching drive details:', error);
+        res.status(500).send('Error fetching drive details');
+    }
+});
+
+// Update the status of a drive
+app.put('/recdrives/:id/status', async (req, res) => {
+    const driveId = req.params.id;
+    const { status } = req.body;
+
+    try {
+        if (!ObjectId.isValid(driveId)) {
+            return res.status(400).send('Invalid drive ID');
+        }
+
+        let update = {};
+        if (status === 'accepted') {
+            update = { isAccepted: true, isRejected: false };
+        } else if (status === 'rejected') {
+            update = { isRejected: true, isAccepted: false };
+        } else {
+            return res.status(400).send('Invalid status');
+        }
+
+        const drivesCollection = db.collection('drives');
+        const result = await drivesCollection.updateOne(
+            { _id: new ObjectId(driveId) },
+            { $set: update }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).send('Drive not found');
+        }
+
+        res.send('Drive status updated');
+    } catch (error) {
+        console.error('Error updating drive status:', error);
+        res.status(500).send('Error updating drive status');
+    }
+});
+
+app.get('/notifiedDrives/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const notifiedDrivesCollection = db.collection('notifiedDrives');
+        const userDoc = await notifiedDrivesCollection.findOne({ userId });
+
+        if (userDoc) {
+            res.json(userDoc.notifiedDrives);
+        } else {
+            res.json([]);
+        }
+    } catch (error) {
+        console.error('Error fetching notified drives:', error);
+        res.status(500).send('Error fetching notified drives');
+    }
+});
+
+app.post('/notifiedDrives/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    const { newDrives } = req.body;
+
+    try {
+        const notifiedDrivesCollection = db.collection('notifiedDrives');
+
+        await notifiedDrivesCollection.updateOne(
+            { userId },
+            { $addToSet: { notifiedDrives: { $each: newDrives } } },
+            { upsert: true }
+        );
+
+        res.send('Notified drives updated');
+    } catch (error) {
+        console.error('Error updating notified drives:', error);
+        res.status(500).send('Error updating notified drives');
+    }
+});
 
 app.post('/create-verifier-drive', async (req, res) => {
     const formData = req.body; // Assuming all form data is sent in the request body
@@ -897,13 +1024,12 @@ app.post('/consent-details', async (req, res) => {
 
 
 app.post('/save-round-details', async (req, res) => {
-    const { driveId, roundId, title, date, text, selectedStudents } = req.body;
-
+    const { driveId, roundId, title, date, text, selectedStudents,resultsDeclared } = req.body;
     try {
         const roundsCollection = db.collection('rounds');
         const round = await roundsCollection.findOneAndUpdate(
             { driveId: driveId, roundId: roundId },
-            { $set: { title, date, text, selectedStudents } },
+            { $set: { title, date, text, selectedStudents,resultsDeclared } },
             { returnOriginal: false, upsert: true }
         );
 
@@ -1003,7 +1129,7 @@ app.get('/appliedStudents/:driveId', async (req, res) => {
         const appliedStudents = await consentCollection.find({ driveId: driveId }).toArray();
 
         if (appliedStudents.length === 0) {
-            return res.status(404).json({ message: 'No applied students found for this drive' });
+            return res.status(200).json(appliedStudents);
         }
 
         res.status(200).json(appliedStudents);
@@ -1098,33 +1224,6 @@ app.get('/get-latest-round/:driveId', async (req, res) => {
 //         res.status(500).json({ message: 'Error sending emails' });
 //     }
 // });
-
-// Helper function to send an email (dummy implementation)
-// async function sendEmail(to, subject, text) {
-//     // Implement your email sending logic here
-//     console.log(`Sending email to ${to} with subject "${subject}" and text "${text}"`);
-//     const transporter = nodemailer.createTransport({
-//         service: 'gmail',
-//         auth: {
-//             user: 'bcs_2022016@iiitm.ac.in',
-//             pass: 'abcd1234'
-//         }
-//     });
-
-//     const mailOptions = {
-//         from: 'bcs_2022016@iiitm.ac.in',
-//         to: to,
-//         subject: subject,
-//         text: text
-//     };
-
-//     try {
-//         let info = await transporter.sendMail(mailOptions);
-//         console.log('Email sent: ' + info.response);
-//     } catch (error) {
-//         console.error('Error sending email:', error);
-//     }
-// }
 
 
 
@@ -1342,8 +1441,120 @@ app.get('/consents/:studentId', async (req, res) => {
     }
 });
 
+// Endpoint to get selected students for a specific round
+app.get('/get-round-selected-students/:driveId/:roundId', async (req, res) => {
+    try {
+      const { driveId, roundId } = req.params;
+      const roundCollection = db.collection('rounds');
+
+      const round = await roundCollection.findOne({ driveId, roundId });
+      if (round) {
+        res.json(round.selectedStudents);
+      } else {
+        res.status(404).send('Round not found');
+      }
+    } catch (error) {
+      res.status(500).send('Error fetching selected students');
+    }
+  });
+
+  
+  // Endpoint to get pemail from consents database
+  app.get('/get-consent/:studentId', async (req, res) => {
+    try {
+      const { studentId } = req.params;
+      const consentCollection = db.collection('consents');
+      const consent = await consentCollection.findOne({ _id: new ObjectId(studentId) });
+
+      if (consent) {
+        res.json({ pemail: consent.pemail });
+      } else {
+        res.status(404).send('Student not found');
+      }
+    } catch (error) {
+      res.status(500).send('Error fetching student consent');
+    }
+  });
+  
+  // Endpoint to send selection emails
+  app.post('/send-selection-emails', async (req, res) => {
+    try {
+      const { emails } = req.body;
+      // Logic to send emails
+      res.send('Emails sent successfully');
+    } catch (error) {
+      res.status(500).send('Error sending emails');
+    }
+  });
+
+  app.post('/send-selection-email', async (req, res) => {
+    const { email, subject, text } = req.body;
+
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'bcs_2022016@iiitm.ac.in',
+                pass: 'abcd1234'
+            }
+        });
+
+        let mailOptions = {
+            from: 'bcs_2022016@iiitm.ac.in', // Replace with your email
+            to: email,
+            subject: subject,
+            text: text
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({ message: 'Email sent successfully' });
+    } catch (error) {
+        console.error('Error sending email:', error);
+        res.status(500).json({ message: 'Error sending email' });
+    }
+});
+  
+app.post('/declareResults', async (req, res) => {
+    const { driveId } = req.body;
+    // Update the drive status to 'declared'
+    const drivesCollection=db.collection('drives')
+    await drivesCollection.findOneAndUpdate({ _id: new ObjectId (driveId) }, { $set: { resultsDeclared: 'true' } });
+    res.status(200).send('Results declared');
+});
+
+// Example endpoint to get the declared state
+app.get('/isResultsDeclared/:driveId', async (req, res) => {
+    const { driveId } = req.params;
+    const drivesCollection=db.collection('drives')
+    const drive = await drivesCollection.findOne({_id:new ObjectId (driveId)});
+    console.log(drive);
+    res.json({ resultsDeclared: drive.resultsDeclared });
+});
+
+app.post('/declareRoundResults', async (req, res) => {
+    const { driveId, roundId } = req.body;
+    const roundsCollection = db.collection('rounds');
+
+    await roundsCollection.updateOne(
+        { driveId: driveId, roundId: parseInt(roundId) },
+        { $set: { resultsDeclared: 'true' } }
+    );
+
+    res.status(200).send('Results declared');
+});
 
 
+app.get('/isRoundResultsDeclared/:driveId/:roundId', async (req, res) => {
+    const { driveId, roundId } = req.params;
+    const roundsCollection = db.collection('rounds');
+    const round = await roundsCollection.findOne({ driveId: driveId, roundId: parseInt(roundId) });
+
+    if (!round) {
+        return res.status(404).json({ error: 'Round not found' });
+    }
+
+    res.json({ resultsDeclared: round.resultsDeclared });
+});
 
 
 

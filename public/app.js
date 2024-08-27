@@ -11,7 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Basic validation
             if (!email || !password) {
-                alert('Please fill in all fields.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'Please fill in all fields.',
+                });
                 return;
             }
 
@@ -33,19 +37,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // localStorage.setItem('token', data.token);
-                    alert('Login successful!');
-                    window.location.href = `/stuhome?id=${data.id}`; 
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Successful',
+                        text: 'You are being redirected...',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        willClose: () => {
+                            window.location.href = `/stuhome?id=${data.id}`;
+                        }
+                    });
                 } else {
-                    alert(`Login failed: ${data.message}`);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: data.message,
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred during login. Please try again.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred during login. Please try again.',
+                });
             }
         });
     }
 });
-
-
-

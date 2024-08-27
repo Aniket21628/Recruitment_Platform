@@ -360,6 +360,7 @@
               <p><strong>College Address:</strong> Morena Link Road, Gwalior, Madhya Pradesh, India. PIN - 474015</p>
             </div>
           </div>
+          
           <div class="row">
             <div class="col-md-8" id="rounds">
               <!-- Initial round -->
@@ -375,33 +376,27 @@
                     Next Round</button>
                 </div>
               </div>
-
               <div id="popupOverlay" class="popup-overlay">
                 <div class="popup">
-                  <h2>Applied Students</h2>
-                  <table class="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Resume Link</th>
-                        <th>Select</th>
-                      </tr>
-                    </thead>
-                    <tbody id="appliedStudentsBody">
-                      <!-- Student details will be populated here -->
-                    </tbody>
-                  </table>
-                  <button type="button" class="btn btn-secondary" onclick="closePopup()">Close</button>
+                    <h2>Applied Students</h2>
+                    <table id="appliedStudentsTable" class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Resume Link</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appliedStudentsBody">
+                            <!-- Student details will be populated here -->
+                        </tbody>
+                    </table>
+                    <button type="button" id="declareButton" class="btn btn-success" onclick="declareAppliedResults()">Confirm and Declare</button>
+                    <button type="button" class="btn btn-secondary" onclick="closePopup()">Close</button>
                 </div>
-              </div>
-
-
-              <div id="roundsContainer" style="border: none;">
-
-              </div>
-
-
+              </div>
+              <div id="roundsContainer"></div>
               <div id="shortlistedPopupOverlay" class="popup-overlay">
                 <div class="popup">
                   <h2>Shortlisted Students</h2>
@@ -418,9 +413,14 @@
                       <!-- Shortlisted student details will be populated here -->
                     </tbody>
                   </table>
+                  <button type="button" id="declareRoundButton" class="btn btn-success" onclick="confirmAndDeclareResults()">Confirm and Declare</button>
                   <button type="button" class="btn btn-secondary" onclick="closeShortlistedPopup()">Close</button>
                 </div>
               </div>
+
+
+
+
 
               <div id="shortlistPopUpOverlays234" class="popup-overlay" style="display: none;">
                 <div class="popup">
@@ -438,6 +438,7 @@
                       <!-- Shortlisted student details will be populated here -->
                     </tbody>
                   </table>
+                  <button type="button" id="declareRoundButton234" class="btn btn-success" onclick="confirmAndDeclareResults()">Confirm and Declare</button>
                   <button type="button" class="btn btn-secondary" onclick="closeShortlistedPopup()">Close</button>
                 </div>
               </div>
@@ -538,6 +539,7 @@
     // Function to close shortlisted students popup
     function closeShortlistedPopup() {
       document.getElementById('shortlistedPopupOverlay').style.display = 'none';
+      document.getElementById('shortlistPopUpOverlays234').style.display = 'none';
     }
     let existingRounds = 0;
 
@@ -674,28 +676,71 @@
 
         // Show the popup overlay with shortlisted students
         document.getElementById('shortlistedPopupOverlay').style.display = 'block';
+        checkIfRoundResultsDeclared(driveId, roundId);
+
       } catch (error) {
         console.error('Error fetching shortlisted students:', error);
       }
     }
 
+//     async function displayShortlistedStudents(roundId, driveId) {
+//       try {
+//         const urlParams = new URLSearchParams(window.location.search);
+//         const driveId = urlParams.get('id');
+//         const response = await fetch(`/shortlistedStudents/${driveId}`);
+
+//         if (!response.ok) {
+//           throw new Error('Failed to fetch shortlisted students');
+//         }
+
+//         const shortlistedStudents = await response.json();
+
+//         // Fetch selected students for the round
+//         const selectedStudentsResponse = await fetch(`get-round-selected-students/${driveId}/${roundId}`);
+
+//         if (!selectedStudentsResponse.ok) {
+//           throw new Error('Failed to fetch selected students for round');
+//         }
+
+//         const selectedStudents = await selectedStudentsResponse.json();
+
+//         const tableBody = document.getElementById('shortlistedStudentsBody');
+//         tableBody.innerHTML = ''; // Clear previous rows
+
+//         shortlistedStudents.forEach(student => {
+//           const row = document.createElement('tr');
+//           const isChecked = selectedStudents.includes(student._id);
+
+//           row.innerHTML = `
+//                 <td>${student.fname}</td>
+//                 <td>${student.pemail}</td>
+//                 <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
+//                 <td><input type="checkbox" data-student-id="${student._id}" data-round-id="${roundId}" data-drive-id="${driveId}" onchange="updateRoundCheckedStudents(this)" ${isChecked ? 'checked' : ''}></td>
+//             `;
+//           tableBody.appendChild(row);
+//         });
+
+//         // Show the popup overlay with shortlisted students
+//         document.getElementById('shortlistedPopupOverlay').style.display = 'block';
+//       } catch (error) {
+//         console.error('Error fetching shortlisted students:', error);
+//       }
+//     }
+
     async function displayShortlistedStudents(roundId, driveId) {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
         const driveId = urlParams.get('id');
         const response = await fetch(`/shortlistedStudents/${driveId}`);
-
         if (!response.ok) {
-          throw new Error('Failed to fetch shortlisted students');
+            throw new Error('Failed to fetch shortlisted students');
         }
 
         const shortlistedStudents = await response.json();
 
-        // Fetch selected students for the round
         const selectedStudentsResponse = await fetch(`/get-round-selected-students/${driveId}/${roundId}`);
-
         if (!selectedStudentsResponse.ok) {
-          throw new Error('Failed to fetch selected students for round');
+            throw new Error('Failed to fetch selected students for round');
         }
 
         const selectedStudents = await selectedStudentsResponse.json();
@@ -704,25 +749,27 @@
         tableBody.innerHTML = ''; // Clear previous rows
 
         shortlistedStudents.forEach(student => {
-          const row = document.createElement('tr');
-          const isChecked = selectedStudents.includes(student._id);
+            const row = document.createElement('tr');
+            const isChecked = selectedStudents.includes(student._id);
 
-          row.innerHTML = `
+            row.innerHTML = `
                 <td>${student.fname}</td>
                 <td>${student.pemail}</td>
                 <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
                 <td><input type="checkbox" data-student-id="${student._id}" data-round-id="${roundId}" data-drive-id="${driveId}" onchange="updateRoundCheckedStudents(this)" ${isChecked ? 'checked' : ''}></td>
             `;
-          tableBody.appendChild(row);
+            tableBody.appendChild(row);
         });
 
-        // Show the popup overlay with shortlisted students
-        document.getElementById('shortlistedPopupOverlay').style.display = 'block';
-      } catch (error) {
-        console.error('Error fetching shortlisted students:', error);
-      }
-    }
+        // Check if results have already been declared for this round and drive
 
+        document.getElementById('shortlistedPopupOverlay').style.display = 'block';
+        checkIfRoundResultsDeclared(driveId, roundId);
+
+    } catch (error) {
+        console.error('Error fetching shortlisted students:', error);
+    }
+}
 
 
     // Function to update checked students array and save to database
@@ -788,9 +835,10 @@
       selectedStudents = [];
       const urlParams = new URLSearchParams(window.location.search);
       const driveId = urlParams.get('id');
+      const resultsDeclared='false';
 
       // Optionally, you can also call saveToDatabase to save changes to the server
-      saveToDatabase(roundId, driveId, cardTitle, cardDate, cardText, selectedStudents)
+      saveToDatabase(roundId, driveId, cardTitle, cardDate, cardText, selectedStudents,resultsDeclared)
         .then(() => {
           // Reload the page after saving changes
           location.reload();
@@ -802,63 +850,89 @@
     }
 
 
-    async function saveToDatabase(roundId, driveId, title, date, text, selectedStudents) {
-      try {
+    async function saveToDatabase(roundId, driveId, title, date, text, selectedStudents, resultsDeclared) { 
+    try {
         const response = await fetch('/save-round-details', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ roundId, driveId, title, date, text, selectedStudents }),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ roundId, driveId, title, date, text, selectedStudents, resultsDeclared }), // Corrected here
         });
 
         if (!response.ok) {
-          throw new Error('Failed to save round details');
+            throw new Error('Failed to save round details');
         }
 
         const data = await response.json();
         console.log('Round details saved successfully:', data);
-      } catch (error) {
+    } catch (error) {
         console.error('Error saving round details:', error);
-      }
     }
+}
+
+
+    var abc = 1;
+
 
     function fetchAndShowAppliedStudents() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const driveId = urlParams.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const driveId = urlParams.get('id');
 
-      if (!driveId) {
+    if (!driveId) {
         console.error('Drive ID is missing or invalid');
         return;
-      }
+    }
 
-      fetch(`/appliedStudents/${driveId}`)
+    fetch(`/appliedStudents/${driveId}`)
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to fetch applied students');
-          }
-          return response.json();
+            if (!response.ok) {
+                throw new Error('Failed to fetch applied students');
+            }
+            return response.json();
         })
         .then(data => {
-          const tableBody = document.getElementById('appliedStudentsBody');
-          tableBody.innerHTML = ''; // Clear previous rows
+            const tableBody = document.getElementById('appliedStudentsBody');
+            tableBody.innerHTML = ''; // Clear previous rows
 
-          data.forEach(student => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-          <td>${student.fname}</td>
-          <td>${student.pemail}</td>
-          <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
-          <td><input type="checkbox" data-student-id="${student._id}" onchange="updateCheckedStatus(event)" ${student.checked ? 'checked' : ''}></td>
-        `;
-            tableBody.appendChild(row);
-          });
+            if (data.length === 0) {
+                document.getElementById('appliedStudentsTable').style.display = 'none';
 
-          // Show the popup overlay
-          document.getElementById('popupOverlay').style.display = 'block';
+                const noApplicants = document.createElement('div');
+                noApplicants.innerHTML = `No students have applied for this post so far!`;
+
+                noApplicants.style.textAlign = 'center'; // Center align text
+                noApplicants.style.fontSize = '18px'; // Adjust font size
+                noApplicants.style.color = '#140878'; // Adjust text color
+                noApplicants.style.margin = '20px'; // Add margin
+
+                if (abc === 1) {
+                    document.getElementsByClassName('popup')[0].appendChild(noApplicants);
+                }
+                abc = 0;
+            } else {
+                
+                data.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${student.fname}</td>
+                        <td>${student.pemail}</td>
+                        <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
+                        <td><input type="checkbox" data-round-id="0" data-student-id="${student._id}" onchange="updateCheckedStatus(event)" ${student.checked ? 'checked' : ''}></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Show the popup overlay
+            document.getElementById('popupOverlay').style.display = 'block';
+
+            // Check if results are declared for the current drive
+            checkIfResultsDeclared(driveId);
+            
         })
         .catch(error => console.error('Error fetching applied students:', error));
-    }
+}
 
     function closePopup() {
       document.getElementById('popupOverlay').style.display = 'none';
@@ -901,28 +975,30 @@
         const response = await fetch(`/studentsDisplayData-byRound/${driveId}/${roundId}`);
         const data = await response.json();
         console.log(data);
+
         if (!response.ok) {
-          throw new Error('Failed to fetch applied students');
+          throw new Error('Failed to fetch shortlisted students');
         }
 
-        const tableBody = document.getElementById('shortlistedStudentsBody');
+        const tableBody = document.getElementById('shortlistedStudentsBody234');
         tableBody.innerHTML = ''; // Clear previous rows
 
         data.forEach(student => {
           const row = document.createElement('tr');
           row.innerHTML = `
-              <td>${student.fname}</td>
-              <td>${student.pemail}</td>
-              <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
-              <td><input type="checkbox" data-student-id="${student.studentID}" data-round-id="${roundId}" data-drive-id="${driveId}" onchange="updateRoundCheckedStudents(this)" ${student.checked ? 'checked' : ''}></td>
+                <td>${student.fname}</td>
+                <td>${student.pemail}</td>
+                <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
+                <td><input type="checkbox" data-student-id="${student.studentID}" data-round-id="${roundId}" data-drive-id="${driveId}" onchange="updateRoundCheckedStudents(this)" ${student.checked ? 'checked' : ''}></td>
             `;
           tableBody.appendChild(row);
         });
 
         // Show the popup overlay
-        document.getElementById('shortlistedPopupOverlay').style.display = 'block';
+        document.getElementById('shortlistPopUpOverlays234').style.display = 'block';
+        checkIfRoundResultsDeclared(driveId,roundId);
       } catch (error) {
-        console.error('Error fetching applied students:', error);
+        console.error('Error fetching shortlisted students:', error);
       }
     }
 
@@ -963,32 +1039,32 @@
     // });
 
     async function handleDeclareResults() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const driveId = urlParams.get('id');
-    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const driveId = urlParams.get('id');
+      try {
         // Fetch the latest round for the drive
         let response = await fetch(`/get-latest-round/${driveId}`);
         if (!response.ok) {
-            throw new Error('Failed to fetch the latest round');
+          throw new Error('Failed to fetch the latest round');
         }
         const latestRound = await response.json();
-        
+
         // Fetch selected student IDs for the latest round
         response = await fetch(`/studentsList-byRound/${driveId}/${latestRound.roundId}`);
         if (!response.ok) {
-            throw new Error('Failed to fetch selected students');
+          throw new Error('Failed to fetch selected students');
         }
         const selectedStudentIds = await response.json();
 
         // Fetch details of each selected student from the consents collection
         const selectedStudents = [];
         for (const studentId of selectedStudentIds) {
-            response = await fetch(`/consents/${studentId}`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch student details for ID ${studentId}`);
-            }
-            const student = await response.json();
-            selectedStudents.push(student);
+          response = await fetch(`/consents/${studentId}`);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch student details for ID ${studentId}`);
+          }
+          const student = await response.json();
+          selectedStudents.push(student);
         }
 
         // Populate the table with student data
@@ -996,27 +1072,27 @@
         tableBody.innerHTML = ''; // Clear previous rows
 
         selectedStudents.forEach(student => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+          const row = document.createElement('tr');
+          row.innerHTML = `
                 <td>${student.fname}</td>
                 <td>${student.pemail}</td>
                 <td><a href="${student.resumelink}" target="_blank">Resume Link</a></td>
             `;
-            tableBody.appendChild(row);
+          tableBody.appendChild(row);
         });
 
         // Show the confirmation section
         document.getElementById('confirmationSection').style.display = 'block';
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching selected students:', error);
+      }
     }
-}
 
 
 
     function confirmResults() {
       // Perform actions to declare results, e.g., sending emails
-      sendEmails();
+      sendConfirmEmails();
       // Hide the confirmation section
       document.getElementById('confirmationSection').style.display = 'none';
       // Optionally, show a success message
@@ -1028,55 +1104,314 @@
       document.getElementById('confirmationSection').style.display = 'none';
     }
 
-    async function sendEmails() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const driveId = urlParams.get('id');
+    async function sendConfirmEmails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const driveId = urlParams.get('id');
 
-    try {
+      try {
         let response = await fetch(`/get-latest-round/${driveId}`);
         if (!response.ok) {
-            throw new Error('Failed to fetch the latest round');
+          throw new Error('Failed to fetch the latest round');
         }
         const latestRound = await response.json();
 
         // Fetch selected student IDs for the latest round
         response = await fetch(`/studentsList-byRound/${driveId}/${latestRound.roundId}`);
         if (!response.ok) {
-            throw new Error('Failed to fetch selected students');
+          throw new Error('Failed to fetch selected students');
         }
         const selectedStudentIds = await response.json();
 
         // Fetch details of each selected student from the consents collection
         const selectedStudents = [];
         for (const studentId of selectedStudentIds) {
-            response = await fetch(`/consents/${studentId}`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch student details for ID ${studentId}`);
-            }
-            const student = await response.json();
-            selectedStudents.push(student);
-            console.log(student.pemail);
+          response = await fetch(`/consents/${studentId}`);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch student details for ID ${studentId}`);
+          }
+          const student = await response.json();
+          selectedStudents.push(student);
+          console.log(student.pemail);
         }
 
 
         // Send emails to each selected student
         for (const student of selectedStudents) {
-            await fetch('/send-email', {
+          await fetch('/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: student.pemail,
+              subject: 'Final Result Declaration',
+            })
+          });
+        }
+      } catch (error) {
+        console.error('Error sending emails:', error);
+      }
+    }
+
+
+    function checkIfRoundResultsDeclared(driveId, roundId) {
+    fetch(`/isRoundResultsDeclared/${driveId}/${roundId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.resultsDeclared === 'true') {
+                hideRoundCheckboxColumn(driveId, roundId); // Hide checkboxes if results are declared
+
+                // Hide the declare buttons
+                const declareButton1 = document.getElementById('declareRoundButton');
+                const declareButton2 = document.getElementById('declareRoundButton234');
+
+                if (declareButton1) {
+                    declareButton1.style.display = 'none';
+                }
+                if (declareButton2) {
+                    declareButton2.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error checking results declared status:', error));
+}
+
+
+
+
+function hideRoundCheckboxColumn(driveId, roundId) {
+    const tableIds = ['#shortlistedPopupOverlay .table', '#shortlistPopUpOverlays234 .table'];
+
+    tableIds.forEach(tableId => {
+        const table = document.querySelector(tableId);
+        if (!table) {
+            console.error(`Table with ID ${tableId} not found`);
+            return;
+        }
+
+        const headers = table.querySelectorAll('th');
+        if (headers.length === 0) {
+            console.error('Table headers not found');
+            return;
+        }
+
+        // Hide the last header cell (checkbox column)
+        headers[headers.length - 1].style.display = 'none';
+
+        // Hide the last cell (checkbox column) in each row
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                const lastCell = cells[cells.length - 1];
+                const checkbox = lastCell.querySelector('input[type="checkbox"]');
+
+                // Hide the last cell if it contains a checkbox with the specified roundId
+                if (checkbox && checkbox.getAttribute('data-round-id') === roundId) {
+                    lastCell.style.display = 'none';
+                } else {
+                    // Hide the cell if it doesn't match the criteria
+                    lastCell.style.display = 'none';
+                }
+            }
+        });
+    });
+}
+
+
+
+
+async function confirmAndDeclareResults() {
+    if (!confirm('Are you sure you want to declare the results? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const driveId = new URLSearchParams(window.location.search).get('id');
+        const roundId = document.querySelector('[data-round-id]').getAttribute('data-round-id');
+
+        const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-round-id="${roundId}"]`);
+
+        const emails = [];
+
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const email = row.querySelector('td:nth-child(2)').textContent;
+                emails.push(email);
+            }
+        });
+                  // Hide the declare buttons
+                  const declareButton1 = document.getElementById('declareRoundButton');
+            const declareButton2 = document.getElementById('declareRoundButton234');
+
+            if (declareButton1) {
+                declareButton1.style.display = 'none';
+            }
+            if (declareButton2) {
+                declareButton2.style.display = 'none';
+            }
+
+        if (emails.length > 0) {
+            // Send emails to selected students
+            await sendEmails(emails);
+
+            // Declare results by setting resultsDeclared to true in the database
+            await fetch('/declareRoundResults', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    email: student.pemail,
-                    subject: 'Final Result Declaration',
-                    text: `Dear ${student.fname},\n\nCongratulations! You have been selected.\n\nBest regards,\nYour Company`
-                })
+                body: JSON.stringify({ driveId, roundId }),
             });
+
+            // Hide checkbox column after results are declared
+            
+  
+            hideRoundCheckboxColumn(roundId);
+
+            alert('Results declared and emails sent successfully!');
+        } else {
+            alert('No students selected.');
         }
+
     } catch (error) {
-        console.error('Error sending emails:', error);
+        console.error('Error declaring results:', error);
     }
 }
+
+function checkIfResultsDeclared(driveId) {
+    fetch(`/isResultsDeclared/${driveId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response Data:', data); // Log the response data
+
+            if (data.resultsDeclared==='true') {
+                hideCheckboxColumn(); // Hide checkboxes if results are declared
+                document.getElementById('declareButton').style.display = 'none'; // Hide the declare button
+            } else {
+                console.log('Results have not been declared yet.');
+                // Optionally, handle the case where results are not declared
+            }
+        })
+        .catch(error => {
+            console.error('Error checking results declared status:', error);
+        });
+}
+// Hide checkbox column
+function hideCheckboxColumn() {
+    const table = document.querySelector('#popupOverlay .table');
+    if (!table) {
+        console.error('Table not found');
+        return;
+    }
+
+    const headers = table.querySelectorAll('th');
+    if (headers.length === 0) {
+        console.error('Table headers not found');
+        return;
+    }
+
+    // Hide the last header cell
+    headers[headers.length - 1].style.display = 'none';
+
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            const lastCell = cells[cells.length - 1];
+            if (lastCell) {
+                lastCell.style.display = 'none';
+            } else {
+                console.warn('Last cell not found in row');
+            }
+        } else {
+            console.warn('No cells found in row');
+        }
+    });
+}
+
+// Declare results and update server
+async function declareAppliedResults() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const driveId = urlParams.get('id');
+
+    if (!driveId) {
+        console.error('Drive ID is missing or invalid');
+        return;
+    }
+
+    try {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][data-round-id="0"]');
+        const emails = [];
+
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const email = row.querySelector('td:nth-child(2)').textContent;
+                emails.push(email);
+            }
+        });
+
+        if (emails.length > 0) {
+          hideCheckboxColumn();
+
+            // Confirm action
+            const confirmAction = confirm("Are you sure you want to declare the results? This action cannot be undone.");
+            if (confirmAction) {
+                document.getElementById('declareButton').style.display = 'none';
+                await sendEmails(emails);
+
+                // Notify the server that results have been declared
+                await fetch('/declareResults', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ driveId }),
+                });
+
+                alert('Results declared and emails sent successfully!');
+            } else {
+                alert('Declaration cancelled.');
+            }
+        } else {
+            alert('No students selected for this round.');
+        }
+    } catch (error) {
+        console.error('Error declaring results:', error);
+    }
+}
+
+// Send emails to selected students
+async function sendEmails(emails) {
+    for (const email of emails) {
+        const emailPayload = {
+            email: email,
+            subject: 'Congratulations! You have been selected!',
+            text: 'Dear student,\n\nCongratulations! You have been selected for the Round 1.\n\nBest regards,\nYour Company'
+        };
+
+        const response = await fetch('/send-selection-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailPayload),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send email');
+        }
+    }
+}
+
+
 
 
 

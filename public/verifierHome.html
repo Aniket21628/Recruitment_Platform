@@ -268,7 +268,7 @@
 
         async function fetchDrives() {
             try {
-                const response = await fetch('http://localhost:5500/recdrives');
+                const response = await fetch('http://localhost:5500/reccordrives');
                 const combined_drives = await response.json();
                 // console.log(verifierDrive);
                 renderDrives(combined_drives);

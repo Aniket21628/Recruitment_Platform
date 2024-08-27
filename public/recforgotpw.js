@@ -16,23 +16,33 @@ function showotpform(event) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('OTP sent to your email');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'OTP Sent',
+                        text: 'OTP has been sent to your email.',
+                    });
                     document.getElementById('otpform').style.display = 'flex';
                 } else {
-                    alert('Error sending OTP');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error sending the OTP. Please try again.',
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error sending OTP');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error sending OTP. Please check your network connection.',
+                });
             });
     } else {
         // Verify OTP
         verifyOtp(event);
     }
 }
-
-let otpFromServer = ''
 
 function verifyOtp(event) {
     event.preventDefault(); // Prevent form from submitting and page from reloading
@@ -49,15 +59,30 @@ function verifyOtp(event) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('OTP verified successfully');
-                const email = encodeURIComponent(data.email); // Encode the email to ensure URL safety
-                window.location.href = `/recchangepw?email=${email}`; // Redirect with email query parameter
+                Swal.fire({
+                    icon: 'success',
+                    title: 'OTP Verified',
+                    text: 'OTP verified successfully. Redirecting...',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    const encodedEmail = encodeURIComponent(data.email); // Encode the email to ensure URL safety
+                    window.location.href = `/recchangepw?email=${encodedEmail}`; // Redirect with email query parameter
+                });
             } else {
-                alert('Invalid OTP');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid OTP',
+                    text: 'The OTP you entered is invalid. Please try again.',
+                });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to verify OTP');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to verify OTP. Please check your network connection.',
+            });
         });
 }
