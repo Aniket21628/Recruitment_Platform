@@ -1347,6 +1347,265 @@
         console.error('Error sending emails:', error);
     }
 }
+
+function checkIfRoundResultsDeclared(driveId, roundId) {
+    fetch(`/isRoundResultsDeclared/${driveId}/${roundId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.resultsDeclared === 'true') {
+                hideRoundCheckboxColumn(driveId, roundId); // Hide checkboxes if results are declared
+
+                // Hide the declare buttons
+                const declareButton1 = document.getElementById('declareRoundButton');
+                const declareButton2 = document.getElementById('declareRoundButton234');
+
+                if (declareButton1) {
+                    declareButton1.style.display = 'none';
+                }
+                if (declareButton2) {
+                    declareButton2.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error checking results declared status:', error));
+}
+
+
+function hideRoundCheckboxColumn(driveId, roundId) {
+    const tableIds = ['#shortlistedPopupOverlay .table', '#shortlistPopUpOverlays234 .table'];
+
+    tableIds.forEach(tableId => {
+        const table = document.querySelector(tableId);
+        if (!table) {
+            console.error(`Table with ID ${tableId} not found`);
+            return;
+        }
+
+        const headers = table.querySelectorAll('th');
+        if (headers.length === 0) {
+            console.error('Table headers not found');
+            return;
+        }
+
+        // Hide the last header cell (checkbox column)
+        headers[headers.length - 1].style.display = 'none';
+
+        // Hide the last cell (checkbox column) in each row
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                const lastCell = cells[cells.length - 1];
+                const checkbox = lastCell.querySelector('input[type="checkbox"]');
+
+                // Hide the last cell if it contains a checkbox with the specified roundId
+                if (checkbox && checkbox.getAttribute('data-round-id') === roundId) {
+                    lastCell.style.display = 'none';
+                } else {
+                    // Hide the cell if it doesn't match the criteria
+                    lastCell.style.display = 'none';
+                }
+            }
+        });
+    });
+}
+
+async function confirmAndDeclareResults() {
+    if (!confirm('Are you sure you want to declare the results? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const driveId = new URLSearchParams(window.location.search).get('id');
+        const roundId = document.querySelector('[data-round-id]').getAttribute('data-round-id');
+
+        const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-round-id="${roundId}"]`);
+
+        const emails = [];
+
+        const declareButton1 = document.getElementById('declareRoundButton');
+        const declareButton2 = document.getElementById('declareRoundButton234');
+
+        if (declareButton1) {
+            declareButton1.style.display = 'none';
+        }
+        if (declareButton2) {
+            declareButton2.style.display = 'none';
+        }
+
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const email = row.querySelector('td:nth-child(2)').textContent;
+                emails.push(email);
+            }
+        });
+
+        if (emails.length > 0) {
+            // Send emails to selected students
+            await sendEmails(emails);
+
+            // Declare results by setting resultsDeclared to true in the database
+            await fetch('/declareRoundResults', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ driveId, roundId }),
+            });
+
+            // Hide checkbox column after results are declared
+            hideCheckboxColumn(roundId);
+
+            alert('Results declared and emails sent successfully!');
+        } else {
+            alert('No students selected.');
+        }
+
+    } catch (error) {
+        console.error('Error declaring results:', error);
+    }
+}
+
+function checkIfResultsDeclared(driveId) {
+    fetch(`/isResultsDeclared/${driveId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response Data:', data); // Log the response data
+
+            if (data.resultsDeclared=='true') {
+                hideCheckboxColumn(); // Hide checkboxes if results are declared
+                document.getElementById('declareButton').style.display = 'none'; // Hide the declare button
+            } 
+            if (data.resultsDeclared=='false') {
+    
+                console.log('Results have not been declared yet.');
+                // Optionally, handle the case where results are not declared
+            }
+        })
+        .catch(error => {
+            console.error('Error checking results declared status:', error);
+        });
+}
+
+
+// Hide checkbox column
+function hideCheckboxColumn() {
+    const table = document.querySelector('#popupOverlay .table');
+    if (!table) {
+        console.error('Table not found');
+        return;
+    }
+
+    const headers = table.querySelectorAll('th');
+    if (headers.length === 0) {
+        console.error('Table headers not found');
+        return;
+    }
+
+    // Hide the last header cell
+    headers[headers.length - 1].style.display = 'none';
+
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            const lastCell = cells[cells.length - 1];
+            if (lastCell) {
+                lastCell.style.display = 'none';
+            } else {
+                console.warn('Last cell not found in row');
+            }
+        } else {
+            console.warn('No cells found in row');
+        }
+    });
+}
+
+// Declare results and update server
+async function declareAppliedResults() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const driveId = urlParams.get('id');
+
+    if (!driveId) {
+        console.error('Drive ID is missing or invalid');
+        return;
+    }
+
+    try {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][data-round-id="0"]');
+        const emails = [];
+
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const email = row.querySelector('td:nth-child(2)').textContent;
+                emails.push(email);
+            }
+        });
+
+        if (emails.length > 0) {
+          hideCheckboxColumn();
+
+            // Confirm action
+            const confirmAction = confirm("Are you sure you want to declare the results? This action cannot be undone.");
+            if (confirmAction) {
+                document.getElementById('declareButton').style.display = 'none';
+                await sendEmails(emails);
+
+                // Notify the server that results have been declared
+                await fetch('/declareResults', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ driveId }),
+                });
+
+                alert('Results declared and emails sent successfully!');
+            } else {
+                alert('Declaration cancelled.');
+            }
+        } else {
+            alert('No students selected for this round.');
+        }
+    } catch (error) {
+        console.error('Error declaring results:', error);
+    }
+}
+
+// Send emails to selected students
+async function sendEmails(emails) {
+    for (const email of emails) {
+        const emailPayload = {
+            email: email,
+            subject: 'Congratulations! You have been selected!',
+            text: 'Dear student,\n\nCongratulations! You have been selected for the Round 1.\n\nBest regards,\nYour Company'
+        };
+
+        const response = await fetch('/send-selection-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailPayload),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send email');
+        }
+    }
+}
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
            
         

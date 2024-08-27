@@ -475,30 +475,34 @@ app.post('/change-password', async (req, res) => {
 
 app.post('/cologin', async (req, res) => {
     const { email, password } = req.body;
-    
+
     try {
         // Find the user by email
-        const coordinatorCollection = db.collection('coordinator');
-        const user = await coordinatorCollection.findOne({ email });
-
-        
+        const verifierCollection = db.collection('coordinator')
+        const user = await verifierCollection.findOne({ email });
 
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
         // Compare the entered password with the hashed password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
+        // const isMatch = await bcrypt.compare(password, user.password);
+        if (password !== user.password) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
+
+        // if (!isMatch) {
+        //     return res.status(400).json({ message: 'Invalid email or password' });
+        // }
+        // Authentication successful
         req.session.userId = user._id;
         req.session.email = user.email;
-        res.status(200).json({ message: 'Login successful',id:user._id });
+        res.status(200).json({ message: 'Login successful', id: user._id });
     } catch (error) {
-        res.status(500).json({ message: 'Error logging in', error });
-    }
+        res.status(500).json({ message: 'Error logging in', error });
+    }
 });
+
 
 
 app.get('/logout', (req, res) => {
@@ -567,7 +571,7 @@ app.get('/check-session', (req, res) => {
 
 
 
-app.get('/rechome', isAuthenticated,(req, res) => {
+
 cron.schedule('0 0 * * *', async () => { 
     try {
         const now = new Date();
@@ -578,7 +582,7 @@ cron.schedule('0 0 * * *', async () => {
         console.error('Error deleting old drives:', error);
     }
 });
-});
+
 
 app.get('/rechome', (req, res) => {
 
