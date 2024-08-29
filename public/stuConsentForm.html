@@ -142,7 +142,7 @@
                         <div class="row">
                             <div class="col-md-6 form-group">
                                 <label for="batch"><strong>Batch</strong></label>
-                                <input type="number" class="form-control" id="batch" placeholder="YYYY" value="2024" pattern="[0-9]{4}" required>
+                                <input type="number" class="form-control" id="batch" placeholder="YYYY" pattern="[0-9]{4}" required>
                             </div>
                         </div>
                         <div class="row">
@@ -256,17 +256,47 @@
 
             })
             document.addEventListener('DOMContentLoaded', async () => {
-           
-        
                 if (sid) {
                     try {
                         const response = await fetch(`/student/${sid}`);
                         if (response.ok) {
                             const data = await response.json();
                             document.getElementById('studentName').textContent = `${data.name}`;
+                            
+
                         } else {
                             document.getElementById('studentName').textContent = 'Student not found';
                         }
+
+                        const response2 = await fetch(`/stuProfileDetails?id=${sid}`);
+                        if(response2.ok) {
+                            const profile = await response2.json();
+                            if(!(profile.Program==undefined) ){
+                                document.getElementById('programs').value=`${profile.Program}`;
+                            }
+                            if(!(profile.EnrollmentYear==undefined)){
+                                document.getElementById('batch').value=`${profile.EnrollmentYear}`;
+                            }
+                            if(!(profile.Rollno==undefined)){
+                                document.getElementById('rollno').value=`${profile.Rollno}`;
+                            }
+                            if(!(profile.PEmail==undefined)){
+                                document.getElementById('pemail').value=`${profile.PEmail}`;
+                            }
+                            if(!(profile.CEmail==undefined)){
+                                document.getElementById('cemail').value=`${profile.CEmail}`;
+                            }
+                            if(!(profile.CGPA==undefined)){
+                                document.getElementById('cgpaCriteria').value=`${profile.CGPA}`;
+                            }
+                            if(!(profile.Backlogs==undefined)){
+                                document.getElementById('backlogsCriteria').value=`${profile.Backlogs}`;
+                            }
+                        } else {
+                            throw new Error('Error fetching profile details.');
+                        }
+                        
+
                     } catch (error) {
                         console.error('Error fetching student details:', error);
                         document.getElementById('studentName').textContent = 'Error fetching student details';
@@ -304,6 +334,8 @@
                     window.location.reload();
                 }
             });
+
+            
     </script>
 </body>
 </html>

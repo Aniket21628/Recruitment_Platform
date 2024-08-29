@@ -140,7 +140,7 @@ body {
 
 #first-window {
     display: flex;
-    height: 100vh;
+    height: auto;
 }
 
 #side-img {
@@ -209,6 +209,11 @@ body {
 .active:after {
     content: "\2796";
 }
+
+#top-bar {
+    display: none;
+}
+
 @media screen and (max-width: 968px) {
     /* Stack elements vertically on smaller screens */
    
@@ -251,4 +256,30 @@ body {
     width: 55vw;
   }
    
+}
+
+@media screen and (max-width: 600px) {
+    #side-img{
+        display: none;
+    }
+    #login-form{
+        width: auto;
+    }
+
+    #first-window{
+        display: flex;
+        flex-direction: column;
+        background-color:#3b5478;
+    }
+
+    #top-bar {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        gap: 5px;
+    }
+    #top-bar-logo{
+        width: 180px;
+        grid-column-start: 6;
+        grid-column-end: 12;
+    }
 }
