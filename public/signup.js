@@ -23,6 +23,44 @@ function showotpform(event) {
     const enteredOtp = enteredOtpElement ? enteredOtpElement.value : '';
 
     if (!enteredOtp) {
+
+        const batchStr = roll.slice(0,4);
+        const program1 = roll.slice(4,7);
+
+        const batch = parseInt(batchStr, 10);
+        const program = program1.toUpperCase();
+
+        console.log(batch);
+        console.log(program);
+
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+
+        const thirdYearBatch = currentYear - 2;
+        const fourthYearBatch = currentYear - 3;
+
+        const fourYearPrograms = ["BCS","EEE","MSC"];
+        const fiveYearPrograms = ["IMG","IMT"];
+
+        if(fourYearPrograms.includes(program)){
+            if( !((batch < (currentYear-2)) || (batch == (currentYear-2) && (currentMonth > 4))) ) {
+                console.log("akkada");
+                alert('Access denied. Only pre-final and final-year students are allowed.');
+                return;
+
+            }
+        }
+
+        if(fiveYearPrograms.includes(program)){
+            if( !((batch < (currentYear-3)) || (batch == (currentYear-3) && (currentMonth > 4))) ) {
+                console.log("ikkada");
+                alert('Access denied. Only pre-final and final students are allowed.');
+                return;
+            }
+        }
+
+        console.log("ekkadooo");
+
         // Send OTP
         fetch('/signup', {
             method: 'POST',
@@ -45,7 +83,6 @@ function showotpform(event) {
                 alert('Error sending OTP');
             });
 
-            console.log('hey1')
     } else {
         // Verify OTP
         Signupverify(event);
@@ -64,38 +101,6 @@ function Signupverify(event) {
     const name = document.getElementById('name').value;
     const roll = document.getElementById('roll').value;
     const password = document.getElementById('password').value;
-
-    const batchStr = roll.slice(0,4);
-    const program1 = roll.slice(4,7);
-
-    const batch = parseInt(batchStr, 10);
-    const program = program1.toUpperCase();
-
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth();
-
-    const thirdYearBatch = currentYear - 2;
-    const fourthYearBatch = currentYear - 3;
-
-    const fourYearPrograms = ["CSE","EEE","MSC"];
-    const fiveYearPrograms = ["IMG","IMT"];
-
-    if(fourYearPrograms.includes(program)){
-        if( !((batch < (currentYear-2)) || (batch == (currentYear-2) && (currentMonth > 4))) ) {
-            alert('Access denied. Only pre-final and final-year students are allowed.');
-            window.location.href=`/login1`;
-            return;
-
-        }
-    }
-
-    if(fiveYearPrograms.includes(program)){
-        if( !((batch < (currentYear-3)) || (batch == (currentYear-3) && (currentMonth > 4))) ) {
-            alert('Access denied. Only pre-final and final students are allowed.');
-            window.location.href=`/login1`;
-            return;
-        }
-    }
 
         fetch('/signup-verify-otp', {
         method: 'POST',
