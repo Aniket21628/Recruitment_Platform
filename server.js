@@ -569,15 +569,16 @@ app.get('/check-session', (req, res) => {
     }
 });
 
-
-
-
 cron.schedule('0 0 * * *', async () => { 
     try {
         const now = new Date();
         const cutoffDate = new Date(now.setDate(now.getDate())); // 30 days ago
 
-        await Drive.deleteMany({ dateOfDrive: { $lt: cutoffDate } });
+        const drivesCollection = db.collection('drives');
+        
+        await drivesCollection.deleteMany({ dateOfDrive: { $lt: cutoffDate } });
+        
+        console.log('Old drives deleted successfully');
     } catch (error) {
         console.error('Error deleting old drives:', error);
     }
