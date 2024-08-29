@@ -12,6 +12,7 @@ const cron = require('node-cron');
 const { ObjectId } = require('mongodb');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const flash = require('connect-flash');
 
 // const jwt = require('jsonwebtoken');
 
@@ -55,6 +56,14 @@ app.use(session({
     store: MongoStore.create({ mongoUrl: mongoUri  }), // Update with your MongoDB connection string
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // 1 day
 }));
+
+
+app.use(flash());
+
+app.use((req, res, next) => {
+    res.locals.messages = req.flash();
+    next();
+});
 
 //home page
 app.get('/', (req, res) => {
@@ -143,10 +152,28 @@ app.post('/logout', (req, res) => {
 });
 
 function isAuthenticated(req, res, next) {
+    if (req.session && req.session.userId) {
+        // User is authenticated
+        return next();
+    } else {
+        // User is not authenticated, redirect with query parameter
+        res.redirect('/login1?alert=login');
+    }
+}
+
+function isRecAuthenticated(req, res, next) {
     if (req.session.userId) {
         return next();
     } else {
-        res.status(401).json({ message: 'Unauthorized' });
+        res.redirect('/rlogin?alert=login');
+    }
+}
+
+function isVerAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return next();
+    } else {
+        res.redirect('/cologin?alert=login');
     }
 }
 
@@ -302,13 +329,6 @@ app.post('/logout', (req, res) => {
     });
 });
 
-function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
-        return next();
-    } else {
-        res.status(401).json({ message: 'Unauthorized' });
-    }
-}
 
 
 
@@ -524,13 +544,6 @@ app.post('/logout', (req, res) => {
         res.redirect('/home');
     });
 });
-function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
-        return next();
-    } else {
-        res.status(401).json({ message: 'Unauthorized' });
-    }
-}
 
 cron.schedule('* * * * *', async () => {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -538,7 +551,7 @@ cron.schedule('* * * * *', async () => {
     console.log('Old OTPs deleted');
 });
 
-app.get('/createdrive',isAuthenticated, (req, res) => {
+app.get('/createdrive',isRecAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'createdrive.html'));
 });
 
@@ -584,7 +597,7 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 
-app.get('/rechome', (req, res) => {
+app.get('/rechome',isRecAuthenticated, (req, res) => {
 
     res.sendFile(path.join(__dirname, 'public', 'rechome.html'));
 });
@@ -654,18 +667,18 @@ app.post('/rec-change-password', async (req, res) => {
     }
 });
 
-app.get('/drivedetails',isAuthenticated, (req, res) => {
+app.get('/drivedetails',isRecAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'drivedetails.html'));
 });
 
-app.get('/verifierhome',isAuthenticated, (req, res) => {
+app.get('/verifierhome',isVerAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierHome.html'));
 });
 
-app.get('/verifierDrive', (req, res) => {
+app.get('/verifierDrive',isVerAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierDrive.html'));
 });
-app.get('/verifierCreate', (req, res) => {
+app.get('/verifierCreate',isVerAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'verifierCreate.html'));
 });
 app.get('/stuDrive',isAuthenticated, (req, res) => {
@@ -1103,7 +1116,7 @@ app.get('/stuAppliedJobs',isAuthenticated, async (rew, res) => {
 app.get('/homestu',isAuthenticated, async (rew, res) => {
     res.sendFile(path.join(__dirname, 'public', 'homestu.html'));
 })
-app.get('/homerec',isAuthenticated, async (rew, res) => {
+app.get('/homerec',isRecAuthenticated, async (rew, res) => {
     res.sendFile(path.join(__dirname, 'public', 'homerec.html'));
 })
 

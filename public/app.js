@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // const signupForm = document.querySelector('#signup-form-id');
     const loginForm = document.querySelector('#login-form-id');
+    const loginButton = document.querySelector('#login-button');
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Disable button to prevent multiple clicks
+            loginButton.disabled = true;
+            loginButton.textContent = 'Signing In...';
+
             // Prepare the data to send
             const loginData = {
                 email: email,
@@ -26,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch('/login1', { // Updated endpoint
+                const response = await fetch('/login1', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -37,9 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (response.ok) {
-                    // localStorage.setItem('token', data.token);
-                    alert('Login successful!');
-                    window.location.href = `/stuhome?id=${result.id}`; 
                     Swal.fire({
                         icon: 'success',
                         title: 'Login Successful',
@@ -47,15 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         timer: 2000,
                         showConfirmButton: false,
                         willClose: () => {
-                            window.location.href = `/stuhome?id=${data.id}`;
+                            // Redirect to home page
+                            window.location.href = `/stuhome?id=${result.id}`;
+
+                            // Replace the login page in history stack with the home page
+                            window.history.replaceState(null, null, `/stuhome?id=${result.id}`);
                         }
                     });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Login Failed',
-                        text: data.message,
+                        text: result.message,
                     });
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Sign In';
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -64,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: 'Error',
                     text: 'An error occurred during login. Please try again.',
                 });
+                loginButton.disabled = false;
+                loginButton.textContent = 'Sign In';
             }
         });
     }

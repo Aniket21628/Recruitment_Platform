@@ -97,6 +97,15 @@ body{
     font-size: 14px;
     margin: 5px 0;
     }
+
+    #submitEmailButton:disabled {
+        background-color: #999;
+        cursor: not-allowed;
+    }
+    #submitOtpButton:disabled {
+        background-color: #999;
+        cursor: not-allowed;
+    }
     
     .btn {
     margin-top: 10px;

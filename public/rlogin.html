@@ -10,7 +10,15 @@
 
   <!-- SweetAlert JS -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+  <script>
+    window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        const alertMessage = params.get('alert');
+        if (alertMessage === 'login') {
+            alert('You need to log in to access this page.');
+        }
+    };
+</script>
 </head>
 <body>
     <div id="first-window">

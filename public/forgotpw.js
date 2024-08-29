@@ -13,31 +13,19 @@ function showotpform(event) {
             },
             body: JSON.stringify({ email })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'OTP Sent',
-                    text: 'OTP has been sent to your email address.',
-                });
-                document.getElementById('otpform').style.display = 'flex';
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to send OTP. Please try again.',
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An unexpected error occurred while sending OTP. Please try again later.',
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP sent to your email');
+                    document.getElementById('otpform').style.display = 'flex';
+                } else {
+                    alert('Error sending OTP');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending OTP');
             });
-        });
     } else {
         // Verify OTP
         verifyOtp(event);
@@ -51,7 +39,6 @@ function verifyOtp(event) {
 
     const enteredOtp = document.getElementById('enteredOtp').value;
     const email = document.getElementById('email').value;
-    
     fetch('/verify-otp', {
         method: 'POST',
         headers: {
@@ -59,34 +46,18 @@ function verifyOtp(event) {
         },
         body: JSON.stringify({ otp: enteredOtp, email })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'OTP Verified',
-                text: 'OTP verified successfully! Redirecting...',
-                timer: 2000,
-                showConfirmButton: false,
-                willClose: () => {
-                    const email = encodeURIComponent(data.email); // Encode the email to ensure URL safety
-                    window.location.href = `/reset-password?email=${email}`; // Redirect with email query parameter
-                }
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Invalid OTP',
-                text: 'The OTP you entered is incorrect. Please try again.',
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Verification Failed',
-            text: 'Failed to verify OTP. Please try again later.',
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('OTP verified successfully');
+                const email = encodeURIComponent(data.email); // Encode the email to ensure URL safety
+                window.location.href = `/reset-password?email=${email}`; // Redirect with email query parameter
+            } else {
+                alert('Invalid OTP');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to verify OTP');
         });
-    });
 }

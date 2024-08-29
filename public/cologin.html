@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="cologin.css">
+    <script>
+      window.onload = function() {
+          const params = new URLSearchParams(window.location.search);
+          const alertMessage = params.get('alert');
+          if (alertMessage === 'login') {
+              alert('You need to log in to access this page.');
+          }
+      };
+  </script>
 
 </head>
 <body>

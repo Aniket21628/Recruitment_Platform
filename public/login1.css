@@ -120,6 +120,11 @@ body {
     ;
 }
 
+#login-button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
+
 
 #side-img {
     display: flex;
