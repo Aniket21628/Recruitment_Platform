@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB connection
-const mongoUri = 'mongodb+srv://harsha:Harsha239874@cluster0.8vbog8c.mongodb.net/UserDB?retryWrites=true&w=majority&appName=Cluster0';
+const mongoUri = 'mongodb+srv://aniketpalarapu15:9kiQ2TYPchAXbbIy@cluster0.igjdwci.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoUri, {
     // `useNewUrlParser: true,
     // useUnifiedTopology: true,
@@ -385,13 +385,13 @@ async function sendOTPEmail(email, otp) {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'bcs_2022016@iiitm.ac.in',
-            pass: 'abcd1234'
+            user: 'aniketpalarapu15@gmail.com',
+            pass: 'nchavqrcbdmdsrms'
         }
     });
 
     const mailOptions = {
-        from: 'bcs_2022016@iiitm.ac.in',
+        from: 'aniketpalarapu15@gmail.com',
         to: email,
         subject: 'Your OTP Code',
         text: `Your OTP code is ${otp}`
@@ -1614,13 +1614,13 @@ app.get('/get-round-selected-students/:driveId/:roundId', async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'bcs_2022016@iiitm.ac.in',
-                pass: 'abcd1234'
+                user: 'aniketpalarapu15@gmail.com',
+                pass: 'nchavqrcbdmdsrms'
             }
         });
 
         let mailOptions = {
-            from: 'bcs_2022016@iiitm.ac.in', // Replace with your email
+            from: 'aniketpalarapu15@gmail.com', // Replace with your email
             to: email,
             subject: subject,
             text: text

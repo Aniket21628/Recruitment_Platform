@@ -46,6 +46,6 @@ function submitChanges() {
                     input.classList.add("error");
                 }
             }
-        });
-    }
+   });
+}
 }

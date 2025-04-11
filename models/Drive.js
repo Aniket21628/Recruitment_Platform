@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const driveSchema = new mongoose.Schema({
+const driveSchema = new Schema({
     name: { type: String, required: true },
     programs: {
         bachelor: [String],
@@ -23,4 +23,4 @@ const driveSchema = new mongoose.Schema({
     jobDescription: { type: String }
 });
 
-module.exports = mongoose.model('Drive', driveSchema);
+export default model('Drive', driveSchema);
